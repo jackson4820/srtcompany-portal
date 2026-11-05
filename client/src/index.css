@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+/* ===== S.R.T. brand theme =====
+   Primary  = deep navy  (blue-* classes, naye shades neeche)
+   Accent   = crimson    (accent-* classes, logo ke red se liya)
+   Colors yaha ek jagah badalne se poori site me change ho jayega. */
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Poppins", "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --color-blue-50: #eef3f9;
+  --color-blue-100: #dbe6f3;
+  --color-blue-200: #b8cde6;
+  --color-blue-300: #8fb0d5;
+  --color-blue-400: #5f8bc0;
+  --color-blue-500: #3a6aa6;
+  --color-blue-600: #25508a;
+  --color-blue-700: #173d6f;
+  --color-blue-800: #0f2d56;
+  --color-blue-900: #0a2140;
+
+  --color-accent-50: #fdf0f2;
+  --color-accent-100: #fbdde2;
+  --color-accent-200: #f6bcc6;
+  --color-accent-300: #ee93a2;
+  --color-accent-400: #e1596f;
+  --color-accent-500: #cf3a52;
+  --color-accent-600: #b41e35;
+  --color-accent-700: #94172b;
+  --color-accent-800: #741426;
+  --color-accent-900: #5a1120;
+}
+
+@layer base {
+  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.015em; }
+}
+
+
+html { scroll-behavior: smooth; }
+
+/* Hero background slow zoom */
+@keyframes kenburns { from { transform: scale(1); } to { transform: scale(1.12); } }
+.kenburns { animation: kenburns 22s ease-in-out infinite alternate; }
+
+/* Text fade-up on load */
+@keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+.fade-up { opacity: 0; animation: fadeUp .8s ease-out forwards; }
+.delay-1 { animation-delay: .15s; }
+.delay-2 { animation-delay: .3s; }
+.delay-3 { animation-delay: .45s; }
+.delay-4 { animation-delay: .6s; }
+
+/* Subtle floating card */
+@keyframes floaty { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+.floaty { animation: floaty 5s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .kenburns, .floaty { animation: none; }
+  .fade-up { animation: none; opacity: 1; }
+  html { scroll-behavior: auto; }
+}
+
+/* Clients marquee */
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.marquee { animation: marquee 35s linear infinite; }
+.marquee:hover { animation-play-state: paused; }
+.marquee-mask { mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+@media (prefers-reduced-motion: reduce) { .marquee { animation: none; } }
