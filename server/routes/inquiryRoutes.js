@@ -46,7 +46,9 @@ router.post(
 
 router.use(protect, authorize('admin'));
 router.get('/', c.listInquiries);
+router.get('/export', c.exportInquiries);
 router.patch('/:id/status', c.updateStatus);
+router.patch('/:id/notes', c.updateNotes);
 router.get('/:id/attachment', c.downloadAttachment);
 router.get('/:id/items/:idx/photo', c.getItemPhoto);
 router.delete('/:id', c.deleteInquiry);

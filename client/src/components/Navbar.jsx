@@ -7,6 +7,7 @@ const links = [
   { to: "/", label: "Home", id: "home" },
   { to: "/products", label: "Products", id: "products" },
   { to: "/#about", label: "About", id: "about" },
+  { to: "/credentials", label: "Credentials", id: "credentials" },
   { to: "/#contact", label: "Contact", id: "contact" },
 ];
 
@@ -54,10 +55,11 @@ export default function Navbar() {
   useEffect(() => setOpen(false), [pathname]);
 
   const isActive = (l) => {
-    if (l.id === "home") return isHome && !section;
-    if (l.id === "products") return pathname.startsWith("/products");
-    return isHome && section === l.id;
-  };
+  if (l.id === "home") return isHome && !section;
+  if (l.id === "products") return pathname.startsWith("/products");
+  if (l.id === "credentials") return pathname.startsWith("/credentials");
+  return isHome && section === l.id;
+};
 
   const handleLogout = () => { logout(); setOpen(false); navigate("/"); };
 

@@ -25,8 +25,10 @@ const inquirySchema = new mongoose.Schema(
     message: { type: String, trim: true, maxlength: 3000 },
     attachment: { path: String, originalName: String },
     status: { type: String, enum: ['new', 'contacted', 'quoted', 'closed'], default: 'new' },
+    notes: { type: String, trim: true, maxlength: 2000 },
   },
   { timestamps: true }
 );
 
+inquirySchema.index({ createdAt: -1 }); // list sort tez rahe
 module.exports = mongoose.model('Inquiry', inquirySchema);

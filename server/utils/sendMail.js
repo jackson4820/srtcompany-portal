@@ -35,7 +35,7 @@ module.exports = async function sendInquiryMail(inq) {
     const label = first ? `${first}${items.length > 1 ? ` +${items.length - 1} more` : ''}` : (inq.productName || inq.projectName || inq.name);
 
     await t.sendMail({
-      from: `"S.R.T. Website" <${SMTP_USER}>`,
+      from: `"S.R. Trading Website" <${SMTP_USER}>`,
       to: INQUIRY_TO || 'srtquotation6@gmail.com',
       replyTo: inq.email,
       subject: `New RFQ: ${label}`,

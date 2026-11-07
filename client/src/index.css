@@ -33,6 +33,16 @@
 
 @layer base {
   h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.015em; }
+
+  /* Tailwind v4 me buttons par pointer cursor default nahi hota */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  summary,
+  select:not(:disabled),
+  input[type="file"]:not(:disabled) {
+    cursor: pointer;
+  }
+  button:disabled { cursor: not-allowed; }
 }
 
 

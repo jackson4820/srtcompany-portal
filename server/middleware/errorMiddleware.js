@@ -14,6 +14,7 @@ const errorHandler = (err, req, res, next) => {
     message = coll === 'users' ? 'An account with this email already exists' : 'This record already exists (duplicate entry)';
     console.error('Duplicate key error:', err.message); // isme collection aur index ka naam dikhta hai
   }
+  else if (err.name === 'CastError') { status = 400; message = 'Invalid ID'; }
   else if (err.name === 'ValidationError') { status = 400; message = Object.values(err.errors).map((e) => e.message).join(', '); }
   else if (err.name === 'MulterError') { status = 400; message = err.code === 'LIMIT_FILE_SIZE' ? 'File must not be larger than 5MB' : err.message; }
   else if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') { status = 401; message = 'Your session is invalid or has expired. Please log in again.'; }

@@ -9,7 +9,6 @@ import TeamSection from "../components/TeamSection";
 import ContactSection from "../components/ContactSection";
 import ClientsMarquee from "../components/ClientsMarquee";
 import HowItWorks from "../components/HowItWorks";
-import TrustSection from "../components/TrustSection";
 import Reveal from "../components/Reveal";
 import InquiryModal from "../components/InquiryModal";
 import Seo from "../components/Seo";
@@ -143,8 +142,6 @@ export default function Home() {
       <AboutSection />
       <SupplySection />
       <HowItWorks />
-      <TrustSection />
-
       <TeamSection />
 
       <ClientsMarquee />

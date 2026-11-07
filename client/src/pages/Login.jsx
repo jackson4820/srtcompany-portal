@@ -26,7 +26,7 @@ export default function Login() {
 
   return (
     <div className="mx-auto my-12 w-full max-w-md rounded-2xl border bg-white p-8 shadow-sm">
-      <Seo title="Login | S.R.T. Company" description="Log in to your S.R.T. Company account." noindex />
+      <Seo title="Login | S.R. Trading Company" description="Log in to your S.R. Trading Company account." noindex />
       <h1 className="mb-6 text-2xl font-bold text-slate-900">Login</h1>
       {error && <p className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
       <form onSubmit={submit} className="space-y-4">

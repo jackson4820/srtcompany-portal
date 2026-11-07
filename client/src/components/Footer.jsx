@@ -18,7 +18,7 @@ export default function Footer() {
 
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:grid-cols-2 lg:grid-cols-4">
         <div>
-          <h3 className="text-xl font-bold text-white">S.R.T. Company</h3>
+          <h3 className="text-xl font-bold text-white">S.R. Trading Company</h3>
           <p className="mt-3 text-sm leading-relaxed text-slate-400">
             {company.tagline}. Supplying electrical equipment, cables, instruments, safety, earthing and hardware to project sites across India.
           </p>
@@ -67,7 +67,7 @@ export default function Footer() {
       </div>
 
       <div className="border-t border-slate-800 py-5 text-center text-xs text-slate-500">
-        &copy; {new Date().getFullYear()} S.R.T. Company. All rights reserved.
+        &copy; {new Date().getFullYear()} S.R. Trading Company. All rights reserved.
       </div>
     </footer>
   );

@@ -7,6 +7,29 @@ const sendInquiryMail = require('../utils/sendMail');
 
 const UPLOADS = path.join(__dirname, '../uploads');
 const MAX_ITEMS = 10;
+const STATUSES = ['new', 'contacted', 'quoted', 'closed'];
+const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+// status + search filter (list aur CSV export dono yahi use karte hain)
+const buildFilter = (q = {}) => {
+  const filter = {};
+  if (STATUSES.includes(q.status)) filter.status = q.status;
+  const s = String(q.search || '').trim().slice(0, 100);
+  if (s) {
+    const re = new RegExp(escapeRegex(s), 'i');
+    filter.$or = ['name', 'email', 'phone', 'company', 'productName', 'projectName', 'deliveryLocation', 'message', 'items.name']
+      .map((f) => ({ [f]: re }));
+  }
+  return filter;
+};
+
+// CSV cell: Excel formula injection se bachav (public form ka text Excel me khulta hai)
+const csvCell = (v) => {
+  let s = v == null ? '' : String(v);
+  if (/^[=+\-@\t\r]/.test(s) && !/^\+?[\d\s()-]+$/.test(s)) s = "'" + s;
+  return `"${s.replace(/"/g, '""')}"`;
+};
+const day = (d) => (d ? new Date(d).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }) : '');
 
 const removeFile = (name) => name && fs.unlink(path.join(UPLOADS, name), () => {});
 const unlinkAll = (files) => Object.values(files || {}).flat().forEach((f) => fs.unlink(f.path, () => {}));
@@ -62,11 +85,50 @@ exports.createInquiry = asyncHandler(async (req, res) => {
   res.status(201).json({ success: true, message: 'Inquiry received. Our team will contact you shortly.', id: inq._id });
 });
 
-// GET /inquiries  (admin)
+// GET /inquiries?status=&search=&page=&limit=  (admin)
 exports.listInquiries = asyncHandler(async (req, res) => {
-  const filter = req.query.status ? { status: req.query.status } : {};
-  const items = await Inquiry.find(filter).sort({ createdAt: -1 }).limit(500).lean();
-  res.json({ success: true, count: items.length, items });
+  const filter = buildFilter(req.query);
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 20));
+
+  const [items, total, grouped] = await Promise.all([
+    Inquiry.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
+    Inquiry.countDocuments(filter),
+    Inquiry.aggregate([{ $group: { _id: '$status', n: { $sum: 1 } } }]),
+  ]);
+
+  const counts = { new: 0, contacted: 0, quoted: 0, closed: 0 };
+  grouped.forEach((g) => { if (g._id in counts) counts[g._id] = g.n; });
+  counts.all = Object.values(counts).reduce((a, b) => a + b, 0);
+
+  res.json({ success: true, count: items.length, total, page, pages: Math.max(1, Math.ceil(total / limit)), counts, items });
+});
+
+// PATCH /inquiries/:id/notes  (admin)
+exports.updateNotes = asyncHandler(async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.id)) return res.status(404).json({ success: false, message: 'Inquiry not found' });
+  const notes = String(req.body?.notes ?? '').trim().slice(0, 2000);
+  const inq = await Inquiry.findByIdAndUpdate(req.params.id, { notes }, { new: true, runValidators: true });
+  if (!inq) return res.status(404).json({ success: false, message: 'Inquiry not found' });
+  res.json({ success: true, item: inq });
+});
+
+// GET /inquiries/export?status=&search=  (admin) - current filter ke hisaab se CSV
+exports.exportInquiries = asyncHandler(async (req, res) => {
+  const rows = await Inquiry.find(buildFilter(req.query)).sort({ createdAt: -1 }).limit(5000).lean();
+  const head = ['Date', 'Name', 'Email', 'Phone', 'Company', 'Items', 'Project', 'Quantity', 'Delivery location', 'Required by', 'Message', 'Status', 'Notes', 'Has attachment'];
+  const lines = rows.map((i) =>
+    [
+      day(i.createdAt), i.name, i.email, i.phone, i.company,
+      i.items?.length ? i.items.map((it) => `${it.name}${it.quantity ? ` (${it.quantity})` : ''}`).join('; ') : i.productName,
+      i.projectName, i.quantity, i.deliveryLocation, day(i.requiredBy), i.message, i.status, i.notes,
+      i.attachment?.path ? 'Yes' : 'No',
+    ].map(csvCell).join(',')
+  );
+  const csv = '\uFEFF' + [head.map(csvCell).join(','), ...lines].join('\r\n'); // BOM: Excel me Hindi/UTF-8 sahi dikhe
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="inquiries-${day(new Date())}.csv"`);
+  res.send(csv);
 });
 
 // PATCH /inquiries/:id/status  (admin)

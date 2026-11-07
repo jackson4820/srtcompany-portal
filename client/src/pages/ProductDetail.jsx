@@ -26,8 +26,8 @@ export default function ProductDetail() {
   const tel = company.phone.replace(/\s/g, "");
   const related = category.items.filter((i) => i.id !== item.id).slice(0, 4);
 
-  const title = `${item.name} Supplier | S.R.T. Company`;
-  const description = `${item.name} (${category.name}) from S.R.T. Company, New Delhi. Supplied to your specification for solar, EPC and industrial project sites across India. Request a quote.`;
+  const title = `${item.name} Supplier | S.R. Trading Company`;
+  const description = `${item.name} (${category.name}) from S.R. Trading Company, New Delhi. Supplied to your specification for solar, EPC and industrial project sites across India. Request a quote.`;
   const path = productPath(category.id, item);
 
   const breadcrumbs = [
@@ -67,7 +67,7 @@ export default function ProductDetail() {
           </Link>
           <h1 className="mt-1 text-3xl font-extrabold text-slate-900 md:text-4xl">{item.name}</h1>
           <p className="mt-4 text-slate-600">
-            S.R.T. Company supplies {item.name.toLowerCase()} for solar, EPC and industrial project sites. {category.tagline}.
+            S.R. Trading Company supplies {item.name.toLowerCase()} for solar, EPC and industrial project sites. {category.tagline}.
             Share your specification, quantity and drawing, and our sourcing team will arrange the material and send you a quotation.
           </p>
 
@@ -92,7 +92,7 @@ export default function ProductDetail() {
             <button onClick={() => setRfq(true)} className="inline-flex items-center gap-2 rounded-lg bg-blue-700 px-6 py-3 font-semibold text-white shadow-lg shadow-blue-700/20 transition hover:-translate-y-0.5 hover:bg-blue-800">
               <Send size={18} /> Request Quote
             </button>
-            <a href={waLink(`Hello S.R.T. Company, I am interested in ${item.name}. Please share a quotation.`)} target="_blank" rel="noopener noreferrer"
+            <a href={waLink(`Hello S.R. Trading Company, I am interested in ${item.name}. Please share a quotation.`)} target="_blank" rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-lg bg-[#25D366] px-6 py-3 font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#1ebe5b]">
               <MessageCircle size={18} /> WhatsApp
             </a>

@@ -1,6 +1,7 @@
 // Company content: yahin se edit karein
 export const company = {
-  name: "S.R.T. Company",
+  name: "S.R. Trading Company",
+  shortName: "S.R.T.",
   legalName: "S.R. Trading Company",
   url: "https://srtcompany.in", // sitemap, canonical aur Open Graph links isi se bante hain
   ogImage: "/images/hero/factory-hd.jpg", // social share preview (ideal: 1200x630 ki image)
@@ -58,7 +59,7 @@ export const clientLogos = [
 // Search engine / social share text. Title ~60 aur description ~155 characters tak rakhein.
 export const seo = {
   home: {
-    title: "S.R.T. Company | Electrical Material Supplier for Solar & EPC",
+    title: "S.R. Trading Company | Electrical Material Supplier for Solar & EPC",
     description:
       "New Delhi-based supplier of electrical equipment, cables, instruments, safety products and earthing materials to solar and EPC project sites across India.",
   },
@@ -70,19 +71,43 @@ export const seo = {
 // ===== TRUST / CREDENTIALS =====
 // Neeche sirf wahi bharein jo sach aur documented ho. Khali chhodne par website par woh item dikhega hi nahi.
 // Poora "Credentials" section tabhi dikhta hai jab kam se kam ek item bhara ho.
+// export const credentials = {
+//   // Chhote fact cards (label + value). Example (apni asli details dalein):
+//   //   { label: "GST Number", value: "07XXXXXXXXXXXXX" },
+//   //   { label: "Established", value: "20XX" },
+//   //   { label: "Udyam / MSME", value: "UDYAM-DL-XX-XXXXXXX" },
+//   facts: [],
+
+//   // Certificates / registrations. Image ya PDF /public/images/certificates/ ya /public/docs/ mein rakhein.
+//   // Example:
+//   //   { name: "ISO 9001:2015", issuer: "Certifying body ka naam", image: "/images/certificates/iso-9001.jpg" },
+//   certificates: [],
+
+//   // Company profile PDF ka link, jaise "/docs/srt-company-profile.pdf" (file client/public/docs/ mein rakhein).
+//   // Bharne par product pages aur Contact mein "Download Company Profile" button aa jayega.
+//   profilePdf: "",
+// };
+
+
 export const credentials = {
-  // Chhote fact cards (label + value). Example (apni asli details dalein):
-  //   { label: "GST Number", value: "07XXXXXXXXXXXXX" },
-  //   { label: "Established", value: "20XX" },
-  //   { label: "Udyam / MSME", value: "UDYAM-DL-XX-XXXXXXX" },
-  facts: [],
+  facts: [
+    { label: "GST Number", value: "07AAEPT6321M1ZD" },   // ← apna asli 15-digit GSTIN
+    { label: "Legal Name", value: "SUKHMEET SINGH TALWAR" },
+    { label: "Established", value: "20XX" },              // ← sach ho tabhi
+  ],
 
-  // Certificates / registrations. Image ya PDF /public/images/certificates/ ya /public/docs/ mein rakhein.
-  // Example:
-  //   { name: "ISO 9001:2015", issuer: "Certifying body ka naam", image: "/images/certificates/iso-9001.jpg" },
-  certificates: [],
+  certificates: [
+  {
+    name: "GST Registration Certificate",
+    issuer: "Government of India, GST Department",
+    image: "/images/certificates/gst-certificate-1.jpg",
+    pages: [
+      "/images/certificates/gst-certificate-1.jpg",
+      "/images/certificates/gst-certificate-2.jpg",
+      "/images/certificates/gst-certificate-3.jpg",
+    ],
+  },
+],
 
-  // Company profile PDF ka link, jaise "/docs/srt-company-profile.pdf" (file client/public/docs/ mein rakhein).
-  // Bharne par product pages aur Contact mein "Download Company Profile" button aa jayega.
-  profilePdf: "",
+  profilePdf: "/docs/srt-company-profile.pdf",
 };

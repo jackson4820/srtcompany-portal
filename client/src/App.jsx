@@ -11,6 +11,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
+import Credentials from "./pages/Credentials";
 
 // /#about jaise links par scroll karne ke liye
 function ScrollHandler() {
@@ -36,6 +37,7 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/credentials" element={<Credentials />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
