@@ -1,26 +1,36 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 const userSchema = new mongoose.Schema(
   {
-    name: { type: String, required: [true, 'Name is required'], trim: true, maxlength: 80 },
+    name: {
+      type: String,
+      required: [true, "Name is required"],
+      trim: true,
+      maxlength: 80,
+    },
     email: {
       type: String,
-      required: [true, 'Email is required'],
+      required: [true, "Email is required"],
       unique: true,
       lowercase: true,
       trim: true,
-      match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email'],
+      match: [/^\S+@\S+\.\S+$/, "Please enter a valid email"],
     },
-    password: { type: String, required: [true, 'Password is required'], minlength: 8, select: false },
-    role: { type: String, enum: ['user', 'admin'], default: 'user' },
+    password: {
+      type: String,
+      required: [true, "Password is required"],
+      minlength: 8,
+      select: false,
+    },
+    role: { type: String, enum: ["user", "admin"], default: "user" },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
   this.password = await bcrypt.hash(this.password, 10); // 10 rounds: secure + fast
 });
 
@@ -30,8 +40,8 @@ userSchema.methods.matchPassword = function (plain) {
 
 userSchema.methods.getSignedJwt = function () {
   return jwt.sign({ id: this._id, role: this.role }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE || '7d',
+    expiresIn: process.env.JWT_EXPIRE || "7d",
   });
 };
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = mongoose.model("User", userSchema);

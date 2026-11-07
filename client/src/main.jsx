@@ -21,7 +21,10 @@ const app = (
 );
 
 // Prerendered HTML tabhi hydrate hota hai jab wo isi URL ka ho (warna host ka fallback page galat content dikhata)
-const here = window.location.pathname.length > 1 ? window.location.pathname.replace(/\/$/, "") : "/";
+const here =
+  window.location.pathname.length > 1
+    ? window.location.pathname.replace(/\/$/, "")
+    : "/";
 if (el.dataset.path && el.dataset.path === here) {
   hydrateRoot(el, app);
 } else {

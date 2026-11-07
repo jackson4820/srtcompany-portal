@@ -18,7 +18,10 @@ const heroSlides = ["/images/hero/factory-hd.jpg"];
 
 const stats = [
   { value: `${clients.length}+`, label: "Trusted clients" },
-  { value: `${categories.reduce((n, c) => n + c.items.length, 0)}+`, label: "Products" },
+  {
+    value: `${categories.reduce((n, c) => n + c.items.length, 0)}+`,
+    label: "Products",
+  },
   { value: "Pan-India", label: "Delivery" },
 ];
 
@@ -28,7 +31,10 @@ export default function Home() {
 
   useEffect(() => {
     if (heroSlides.length < 2) return;
-    const t = setInterval(() => setSlide((i) => (i + 1) % heroSlides.length), 6000);
+    const t = setInterval(
+      () => setSlide((i) => (i + 1) % heroSlides.length),
+      6000,
+    );
     return () => clearInterval(t);
   }, []);
 
@@ -44,7 +50,12 @@ export default function Home() {
             key={src}
             className={`absolute inset-0 transition-opacity duration-1000 ${i === slide ? "opacity-100" : "opacity-0"}`}
           >
-            <img src={src} alt="" fetchPriority="high" className="h-full w-full object-cover" />
+            <img
+              src={src}
+              alt=""
+              fetchPriority="high"
+              className="h-full w-full object-cover"
+            />
           </div>
         ))}
 
@@ -67,12 +78,15 @@ export default function Home() {
 
             <h1 className="fade-up delay-1 text-4xl font-extrabold leading-[1.08] tracking-tight sm:text-5xl lg:text-6xl xl:text-7xl">
               Leading project associate for{" "}
-              <span className="bg-gradient-to-r from-accent-200 to-accent-400 bg-clip-text text-transparent">EPC &amp; Solar</span>{" "}
+              <span className="bg-gradient-to-r from-accent-200 to-accent-400 bg-clip-text text-transparent">
+                EPC &amp; Solar
+              </span>{" "}
               industries
             </h1>
 
             <p className="fade-up delay-2 mt-6 max-w-xl text-lg leading-relaxed text-slate-200 md:text-xl">
-              Quality electrical, safety and earthing materials, sourced per your project BOQ and delivered to site.
+              Quality electrical, safety and earthing materials, sourced per
+              your project BOQ and delivered to site.
             </p>
 
             <div className="fade-up delay-3 mt-9 flex flex-wrap gap-4">
@@ -94,8 +108,12 @@ export default function Home() {
             <dl className="fade-up delay-4 mt-12 grid max-w-lg grid-cols-3 gap-6 border-t border-white/15 pt-6">
               {stats.map((s) => (
                 <div key={s.label}>
-                  <dt className="text-3xl font-extrabold text-white">{s.value}</dt>
-                  <dd className="mt-1 text-xs uppercase tracking-wider text-slate-300">{s.label}</dd>
+                  <dt className="text-3xl font-extrabold text-white">
+                    {s.value}
+                  </dt>
+                  <dd className="mt-1 text-xs uppercase tracking-wider text-slate-300">
+                    {s.label}
+                  </dd>
                 </div>
               ))}
             </dl>
@@ -114,7 +132,10 @@ export default function Home() {
                 <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-accent-600">
                   <Truck size={14} /> Pan-India supply
                 </p>
-                <p className="mt-1.5 text-sm leading-snug">Materials for solar and EPC project sites, sourced to your BOQ.</p>
+                <p className="mt-1.5 text-sm leading-snug">
+                  Materials for solar and EPC project sites, sourced to your
+                  BOQ.
+                </p>
               </div>
             </div>
           </div>
@@ -123,9 +144,15 @@ export default function Home() {
         {/* Product categories strip */}
         <div className="absolute inset-x-0 bottom-0 hidden border-t border-white/10 bg-slate-950/40 backdrop-blur-md md:block">
           <div className="mx-auto flex max-w-7xl items-center gap-3 overflow-x-auto px-4 py-3 text-sm">
-            <span className="shrink-0 text-xs font-semibold uppercase tracking-wider text-slate-400">We supply</span>
+            <span className="shrink-0 text-xs font-semibold uppercase tracking-wider text-slate-400">
+              We supply
+            </span>
             {categories.map((c) => (
-              <Link key={c.id} to={`/products?category=${c.id}`} className="shrink-0 rounded-full border border-white/15 px-3 py-1 text-slate-200 transition hover:border-accent-400 hover:text-accent-300">
+              <Link
+                key={c.id}
+                to={`/products?category=${c.id}`}
+                className="shrink-0 rounded-full border border-white/15 px-3 py-1 text-slate-200 transition hover:border-accent-400 hover:text-accent-300"
+              >
                 {c.name}
               </Link>
             ))}
@@ -133,8 +160,17 @@ export default function Home() {
         </div>
 
         {/* Scroll cue */}
-        <a href="#about" onClick={(e) => { e.preventDefault(); document.getElementById("about")?.scrollIntoView({ behavior: "smooth" }); }}
-          className="absolute bottom-20 left-1/2 hidden -translate-x-1/2 text-white/70 transition hover:text-white md:block" aria-label="Scroll down">
+        <a
+          href="#about"
+          onClick={(e) => {
+            e.preventDefault();
+            document
+              .getElementById("about")
+              ?.scrollIntoView({ behavior: "smooth" });
+          }}
+          className="absolute bottom-20 left-1/2 hidden -translate-x-1/2 text-white/70 transition hover:text-white md:block"
+          aria-label="Scroll down"
+        >
           <ChevronDown size={30} className="animate-bounce" />
         </a>
       </section>

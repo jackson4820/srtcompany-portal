@@ -17,7 +17,14 @@ import Credentials from "./pages/Credentials";
 function ScrollHandler() {
   const { pathname, hash } = useLocation();
   useEffect(() => {
-    if (hash) setTimeout(() => document.getElementById(hash.slice(1))?.scrollIntoView({ behavior: "smooth" }), 50);
+    if (hash)
+      setTimeout(
+        () =>
+          document
+            .getElementById(hash.slice(1))
+            ?.scrollIntoView({ behavior: "smooth" }),
+        50,
+      );
     else window.scrollTo(0, 0);
   }, [pathname, hash]);
   return null;
@@ -36,7 +43,14 @@ export default function App() {
           <Route path="/products/:category/:slug" element={<ProductDetail />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/credentials" element={<Credentials />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

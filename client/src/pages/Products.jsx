@@ -14,14 +14,20 @@ export default function Products() {
   const category = categories.find((c) => c.id === valid);
 
   // Category URL par us category ka apna title/description, warna general products page ka
-  const title = category ? `${category.name} Supplier | S.R. Trading Company` : seo.products.title;
+  const title = category
+    ? `${category.name} Supplier | S.R. Trading Company`
+    : seo.products.title;
   const description = category
     ? `${category.name} supplier in New Delhi. ${category.tagline}. Request a quote.`
     : `${total} product lines in ${categories.length} categories: electrical equipment, cables, instruments, safety, earthing and hardware. Request a quote.`;
 
   return (
     <>
-      <Seo title={title} description={description} path={category ? `/products?category=${valid}` : "/products"} />
+      <Seo
+        title={title}
+        description={description}
+        path={category ? `/products?category=${valid}` : "/products"}
+      />
       <CategoryExplorer key={valid || "all"} initialCategory={valid} />
     </>
   );

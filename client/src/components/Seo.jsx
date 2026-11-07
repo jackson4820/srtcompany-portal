@@ -14,13 +14,21 @@ const upsert = (tag, attr, key, attrs) => {
 };
 const meta = (attr, key, content) => upsert("meta", attr, key, { content });
 
-export default function Seo({ title, description, path, image = company.ogImage, noindex = false, jsonLd }) {
+export default function Seo({
+  title,
+  description,
+  path,
+  image = company.ogImage,
+  noindex = false,
+  jsonLd,
+}) {
   const { pathname } = useLocation();
   const collector = useContext(HeadCollector);
   const route = path ?? pathname;
 
   // Sirf prerender (server) ke waqt collector hota hai
-  if (collector) collector.current = { title, description, image, noindex, jsonLd };
+  if (collector)
+    collector.current = { title, description, image, noindex, jsonLd };
 
   useEffect(() => {
     const url = company.url + (route === "/" ? "/" : route);
@@ -44,7 +52,9 @@ export default function Seo({ title, description, path, image = company.ogImage,
   useEffect(() => {
     if (!ld) return;
     // Prerender wala script pehle hatao, warna duplicate ho jayega
-    document.head.querySelectorAll('script[data-seo="page"]').forEach((n) => n.remove());
+    document.head
+      .querySelectorAll('script[data-seo="page"]')
+      .forEach((n) => n.remove());
     const el = document.createElement("script");
     el.type = "application/ld+json";
     el.dataset.seo = "page";

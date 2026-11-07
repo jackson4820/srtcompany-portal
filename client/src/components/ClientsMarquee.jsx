@@ -7,8 +7,12 @@ export default function ClientsMarquee() {
     <section className="bg-slate-50 py-20">
       <div className="mx-auto max-w-7xl px-4">
         <Reveal>
-          <p className="text-base font-semibold uppercase tracking-wider text-accent-600 md:text-lg">Clients</p>
-          <h2 className="mt-2 text-3xl font-extrabold text-slate-900 md:text-4xl">Trusted Clients / Project Suppliers</h2>
+          <p className="text-base font-semibold uppercase tracking-wider text-accent-600 md:text-lg">
+            Clients
+          </p>
+          <h2 className="mt-2 text-3xl font-extrabold text-slate-900 md:text-4xl">
+            Trusted Clients / Project Suppliers
+          </h2>
         </Reveal>
 
         <div className="marquee-mask mt-10 overflow-hidden">

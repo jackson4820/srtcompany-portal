@@ -29,12 +29,24 @@ export const team = [
     phone: "+91 9311764338",
     photo: "/images/team/kavita.jpg", // photo yahan: client/public/images/team/kavita.jpg
   },
-  
 ];
 
 export const clients = [
-  "NTPC", "BHEL", "SolarWorld", "Gentari", "Aditya Birla", "Siemens", "Secure", "Mahindra", "Delhi Metro Rail Corporation",
-  "ENGIE", "Crompton Greaves", "Schneider Electric", "Vikram Solar", "Kalpa-Taru", "Sekura",
+  "NTPC",
+  "BHEL",
+  "SolarWorld",
+  "Gentari",
+  "Aditya Birla",
+  "Siemens",
+  "Secure",
+  "Mahindra",
+  "Delhi Metro Rail Corporation",
+  "ENGIE",
+  "Crompton Greaves",
+  "Schneider Electric",
+  "Vikram Solar",
+  "Kalpa-Taru",
+  "Sekura",
 ];
 
 // Client logos (marquee ke liye). Naya client: logo /public/images/clients/ me daalo aur yaha ek line add karo.
@@ -50,7 +62,10 @@ export const clientLogos = [
   { name: "Delhi Metro Rail Corporation", logo: "/images/clients/dmrc.png" },
   { name: "ENGIE", logo: "/images/clients/engie.png" },
   { name: "Crompton Greaves", logo: "/images/clients/crompton-greaves.png" },
-  { name: "Schneider Electric", logo: "/images/clients/schneider-electric.png" },
+  {
+    name: "Schneider Electric",
+    logo: "/images/clients/schneider-electric.png",
+  },
   { name: "Vikram Solar", logo: "/images/clients/vikram-solar.png" },
   { name: "Kalpa-Taru", logo: "/images/clients/kalpa-taru.png" },
   { name: "Sekura", logo: "/images/clients/sekura.png" },
@@ -59,7 +74,8 @@ export const clientLogos = [
 // Search engine / social share text. Title ~60 aur description ~155 characters tak rakhein.
 export const seo = {
   home: {
-    title: "S.R. Trading Company | Electrical Material Supplier for Solar & EPC",
+    title:
+      "S.R. Trading Company | Electrical Material Supplier for Solar & EPC",
     description:
       "New Delhi-based supplier of electrical equipment, cables, instruments, safety products and earthing materials to solar and EPC project sites across India.",
   },
@@ -88,26 +104,25 @@ export const seo = {
 //   profilePdf: "",
 // };
 
-
 export const credentials = {
   facts: [
-    { label: "GST Number", value: "07AAEPT6321M1ZD" },   // ← apna asli 15-digit GSTIN
+    { label: "GST Number", value: "07AAEPT6321M1ZD" }, // ← apna asli 15-digit GSTIN
     { label: "Legal Name", value: "SUKHMEET SINGH TALWAR" },
-    { label: "Established", value: "20XX" },              // ← sach ho tabhi
+    { label: "Established", value: "20XX" }, // ← sach ho tabhi
   ],
 
   certificates: [
-  {
-    name: "GST Registration Certificate",
-    issuer: "Government of India, GST Department",
-    image: "/images/certificates/gst-certificate-1.jpg",
-    pages: [
-      "/images/certificates/gst-certificate-1.jpg",
-      "/images/certificates/gst-certificate-2.jpg",
-      "/images/certificates/gst-certificate-3.jpg",
-    ],
-  },
-],
+    {
+      name: "GST Registration Certificate",
+      issuer: "Government of India, GST Department",
+      image: "/images/certificates/gst-certificate-1.jpg",
+      pages: [
+        "/images/certificates/gst-certificate-1.jpg",
+        "/images/certificates/gst-certificate-2.jpg",
+        "/images/certificates/gst-certificate-3.jpg",
+      ],
+    },
+  ],
 
   profilePdf: "/docs/srt-company-profile.pdf",
 };

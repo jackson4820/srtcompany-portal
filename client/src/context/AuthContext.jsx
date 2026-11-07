@@ -1,4 +1,10 @@
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
 import { TOKEN_KEY } from "../api/axiosClient";
 import { loginApi, registerApi, getMeApi } from "../api/authApi";
 
@@ -21,7 +27,9 @@ export function AuthProvider({ children }) {
     }
     getMeApi()
       .then((d) => setUser(d.user))
-      .catch((e) => { if (e.status === 401) logout(); })
+      .catch((e) => {
+        if (e.status === 401) logout();
+      })
       .finally(() => setLoading(false));
   }, [logout]);
 
@@ -31,11 +39,22 @@ export function AuthProvider({ children }) {
     return data.user;
   };
 
-  const login = async (email, password) => finish(await loginApi(email, password));
-  const register = async (name, email, password) => finish(await registerApi(name, email, password));
+  const login = async (email, password) =>
+    finish(await loginApi(email, password));
+  const register = async (name, email, password) =>
+    finish(await registerApi(name, email, password));
 
   return (
-    <AuthContext.Provider value={{ user, loading, isAuthenticated: !!user, login, register, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        isAuthenticated: !!user,
+        login,
+        register,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

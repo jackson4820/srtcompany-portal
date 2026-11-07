@@ -18,11 +18,30 @@ export default function CountUp({ to, duration = 1200, suffix = "" }) {
       };
       raf = requestAnimationFrame(tick);
     };
-    if (!("IntersectionObserver" in window)) { setN(to); return; }
-    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { run(); io.disconnect(); } }, { threshold: 0.4 });
+    if (!("IntersectionObserver" in window)) {
+      setN(to);
+      return;
+    }
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) {
+          run();
+          io.disconnect();
+        }
+      },
+      { threshold: 0.4 },
+    );
     io.observe(el);
-    return () => { io.disconnect(); cancelAnimationFrame(raf); };
+    return () => {
+      io.disconnect();
+      cancelAnimationFrame(raf);
+    };
   }, [to, duration]);
 
-  return <span ref={ref}>{n}{suffix}</span>;
+  return (
+    <span ref={ref}>
+      {n}
+      {suffix}
+    </span>
+  );
 }

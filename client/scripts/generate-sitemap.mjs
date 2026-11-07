@@ -14,8 +14,18 @@ const pages = [
   { loc: "/", priority: "1.0", freq: "weekly" },
   { loc: "/products", priority: "0.9", freq: "weekly" },
   { loc: "/credentials", priority: "0.7", freq: "monthly" },
-  ...categories.map((c) => ({ loc: `/products?category=${c.id}`, priority: "0.8", freq: "monthly" })),
-  ...categories.flatMap((c) => c.items.map((i) => ({ loc: productPath(c.id, i), priority: "0.6", freq: "monthly" }))),
+  ...categories.map((c) => ({
+    loc: `/products?category=${c.id}`,
+    priority: "0.8",
+    freq: "monthly",
+  })),
+  ...categories.flatMap((c) =>
+    c.items.map((i) => ({
+      loc: productPath(c.id, i),
+      priority: "0.6",
+      freq: "monthly",
+    })),
+  ),
 ];
 
 const xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -27,7 +37,7 @@ ${pages
     <lastmod>${today}</lastmod>
     <changefreq>${p.freq}</changefreq>
     <priority>${p.priority}</priority>
-  </url>`
+  </url>`,
   )
   .join("\n")}
 </urlset>
@@ -44,4 +54,6 @@ Sitemap: ${base}/sitemap.xml
 mkdirSync(join(root, "public"), { recursive: true });
 writeFileSync(join(root, "public", "sitemap.xml"), xml);
 writeFileSync(join(root, "public", "robots.txt"), robots);
-console.log(`sitemap.xml (${pages.length} URLs) aur robots.txt bane -> ${base}`);
+console.log(
+  `sitemap.xml (${pages.length} URLs) aur robots.txt bane -> ${base}`,
+);

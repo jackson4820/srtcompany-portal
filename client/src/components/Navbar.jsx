@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, LogIn, UserPlus, LayoutDashboard, LogOut } from "lucide-react";
+import {
+  Menu,
+  X,
+  LogIn,
+  UserPlus,
+  LayoutDashboard,
+  LogOut,
+} from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 const links = [
@@ -40,31 +47,42 @@ export default function Navbar() {
   useEffect(() => {
     setSection(null);
     if (!isHome) return;
-    const targets = ["about", "contact"].map((id) => document.getElementById(id)).filter(Boolean);
+    const targets = ["about", "contact"]
+      .map((id) => document.getElementById(id))
+      .filter(Boolean);
     if (!targets.length) return;
     const io = new IntersectionObserver(
-      (entries) => entries.forEach((e) => e.isIntersecting && setSection(e.target.id)),
-      { rootMargin: "-40% 0px -50% 0px" }
+      (entries) =>
+        entries.forEach((e) => e.isIntersecting && setSection(e.target.id)),
+      { rootMargin: "-40% 0px -50% 0px" },
     );
     targets.forEach((t) => io.observe(t));
     const onTop = () => window.scrollY < 200 && setSection(null);
     window.addEventListener("scroll", onTop, { passive: true });
-    return () => { io.disconnect(); window.removeEventListener("scroll", onTop); };
+    return () => {
+      io.disconnect();
+      window.removeEventListener("scroll", onTop);
+    };
   }, [isHome, pathname]);
 
   useEffect(() => setOpen(false), [pathname]);
 
   const isActive = (l) => {
-  if (l.id === "home") return isHome && !section;
-  if (l.id === "products") return pathname.startsWith("/products");
-  if (l.id === "credentials") return pathname.startsWith("/credentials");
-  return isHome && section === l.id;
-};
+    if (l.id === "home") return isHome && !section;
+    if (l.id === "products") return pathname.startsWith("/products");
+    if (l.id === "credentials") return pathname.startsWith("/credentials");
+    return isHome && section === l.id;
+  };
 
-  const handleLogout = () => { logout(); setOpen(false); navigate("/"); };
+  const handleLogout = () => {
+    logout();
+    setOpen(false);
+    navigate("/");
+  };
 
   const textColor = transparent ? "text-white" : "text-slate-700";
-  const btn = "inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0";
+  const btn =
+    "inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0";
   const outline = transparent
     ? `${btn} border border-white/70 text-white hover:bg-white/15`
     : `${btn} border border-blue-700 text-blue-700 hover:bg-blue-50`;
@@ -76,13 +94,21 @@ export default function Navbar() {
     if (loading) return null;
     return isAuthenticated ? (
       <>
-        <Link to="/dashboard" onClick={onClick} className={outline}><LayoutDashboard size={16} /> Dashboard</Link>
-        <button onClick={handleLogout} className={solid}><LogOut size={16} /> Logout</button>
+        <Link to="/dashboard" onClick={onClick} className={outline}>
+          <LayoutDashboard size={16} /> Dashboard
+        </Link>
+        <button onClick={handleLogout} className={solid}>
+          <LogOut size={16} /> Logout
+        </button>
       </>
     ) : (
       <>
-        <Link to="/login" onClick={onClick} className={outline}><LogIn size={16} /> Login</Link>
-        <Link to="/register" onClick={onClick} className={solid}><UserPlus size={16} /> Register</Link>
+        <Link to="/login" onClick={onClick} className={outline}>
+          <LogIn size={16} /> Login
+        </Link>
+        <Link to="/register" onClick={onClick} className={solid}>
+          <UserPlus size={16} /> Register
+        </Link>
       </>
     );
   };
@@ -90,18 +116,28 @@ export default function Navbar() {
   return (
     <header
       className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
-        transparent ? "bg-gradient-to-b from-black/40 to-transparent" : "bg-white/95 shadow-md backdrop-blur"
+        transparent
+          ? "bg-gradient-to-b from-black/40 to-transparent"
+          : "bg-white/95 shadow-md backdrop-blur"
       }`}
     >
-      <nav className={`mx-auto flex max-w-7xl items-center justify-between px-4 transition-all duration-300 ${scrolled ? "py-2" : "py-3"}`}>
+      <nav
+        className={`mx-auto flex max-w-7xl items-center justify-between px-4 transition-all duration-300 ${scrolled ? "py-2" : "py-3"}`}
+      >
         {/* Logo */}
-        <Link to="/" className="group flex items-center gap-2" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+        <Link
+          to="/"
+          className="group flex items-center gap-2"
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        >
           <img
             src="/images/logo.png"
             alt="S.R. Trading Company logo"
             className="h-11 w-11 object-contain drop-shadow-[0_2px_6px_rgba(0,0,0,0.35)] transition-transform duration-300 group-hover:rotate-6 group-hover:scale-110"
           />
-          <span className={`text-base font-extrabold tracking-tight transition-colors sm:text-lg ${transparent ? "text-white" : "text-blue-800"}`}>
+          <span
+            className={`text-base font-extrabold tracking-tight transition-colors sm:text-lg ${transparent ? "text-white" : "text-blue-800"}`}
+          >
             S.R. Trading Company
           </span>
         </Link>
@@ -118,7 +154,9 @@ export default function Navbar() {
               {l.label}
               <span
                 className={`absolute inset-x-3 -bottom-0.5 h-0.5 origin-left rounded bg-accent-500 transition-transform duration-300 ${
-                  isActive(l) ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+                  isActive(l)
+                    ? "scale-x-100"
+                    : "scale-x-0 group-hover:scale-x-100"
                 }`}
               />
             </NavLink>
@@ -128,7 +166,9 @@ export default function Navbar() {
         {/* Desktop auth */}
         <div className="hidden items-center gap-2 md:flex">
           {isAuthenticated && (
-            <span className={`mr-1 flex items-center gap-2 text-sm ${transparent ? "text-white/90" : "text-slate-500"}`}>
+            <span
+              className={`mr-1 flex items-center gap-2 text-sm ${transparent ? "text-white/90" : "text-slate-500"}`}
+            >
               <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-700 text-xs font-bold text-white">
                 {user.name?.[0]?.toUpperCase()}
               </span>
@@ -150,7 +190,9 @@ export default function Navbar() {
       </nav>
 
       {/* Mobile panel (slide animation) */}
-      <div className={`grid transition-all duration-300 md:hidden ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
+      <div
+        className={`grid transition-all duration-300 md:hidden ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
+      >
         <div className="overflow-hidden bg-white">
           <div className="space-y-1 border-t px-4 py-3">
             {links.map((l) => (
@@ -172,7 +214,10 @@ export default function Navbar() {
 
       {/* Scroll progress */}
       <div className="absolute inset-x-0 bottom-0 h-0.5 bg-transparent">
-        <div className="h-full bg-accent-500 transition-[width] duration-100" style={{ width: `${progress}%` }} />
+        <div
+          className="h-full bg-accent-500 transition-[width] duration-100"
+          style={{ width: `${progress}%` }}
+        />
       </div>
     </header>
   );

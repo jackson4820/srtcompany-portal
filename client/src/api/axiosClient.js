@@ -43,9 +43,10 @@ axiosClient.interceptors.response.use(
     err.status = error.response?.status;
     err.code = error.code;
     return Promise.reject(err);
-  }
+  },
 );
 
-export const errMsg = (e) => e?.message || "Something went wrong. Please try again.";
+export const errMsg = (e) =>
+  e?.message || "Something went wrong. Please try again.";
 
 export default axiosClient;

@@ -32,7 +32,11 @@ function TeamCard({ m }) {
       <div className="border-t-4 border-accent-500 p-5 text-center">
         <h3 className="text-lg font-bold text-slate-900">{m.name}</h3>
         <p className="mt-1 text-sm font-medium text-blue-700">{m.role}</p>
-        {m.note && <p className="mt-2 text-xs uppercase tracking-wide text-slate-500">{m.note}</p>}
+        {m.note && (
+          <p className="mt-2 text-xs uppercase tracking-wide text-slate-500">
+            {m.note}
+          </p>
+        )}
         {m.phone && (
           <a
             href={`tel:${m.phone.replace(/\s/g, "")}`}
@@ -50,8 +54,12 @@ export default function TeamSection() {
   return (
     <section className="mx-auto max-w-7xl px-4 py-16">
       <Reveal>
-        <p className="text-sm font-semibold uppercase tracking-wider text-accent-600">Team</p>
-        <h2 className="mt-2 text-3xl font-extrabold text-slate-900 md:text-4xl">Our Team</h2>
+        <p className="text-sm font-semibold uppercase tracking-wider text-accent-600">
+          Team
+        </p>
+        <h2 className="mt-2 text-3xl font-extrabold text-slate-900 md:text-4xl">
+          Our Team
+        </h2>
       </Reveal>
       <div className="mt-8 flex flex-wrap gap-6">
         {team.map((m, i) => (

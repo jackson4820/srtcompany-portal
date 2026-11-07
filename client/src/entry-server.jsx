@@ -13,7 +13,7 @@ export function render(url) {
           <App />
         </AuthProvider>
       </StaticRouter>
-    </HeadCollector.Provider>
+    </HeadCollector.Provider>,
   );
   return { html, head: head.current };
 }

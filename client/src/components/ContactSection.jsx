@@ -1,4 +1,12 @@
-import { MapPin, Phone, Mail, Send, ExternalLink, MessageCircle, Download } from "lucide-react";
+import {
+  MapPin,
+  Phone,
+  Mail,
+  Send,
+  ExternalLink,
+  MessageCircle,
+  Download,
+} from "lucide-react";
 import { company, credentials } from "../data/content";
 import { waLink } from "../utils/whatsapp";
 import Reveal from "./Reveal";
@@ -12,8 +20,12 @@ function InfoRow({ icon: Icon, label, children }) {
         <Icon size={20} />
       </div>
       <div className="min-w-0">
-        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{label}</p>
-        <div className="mt-0.5 break-words font-medium text-slate-800">{children}</div>
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+          {label}
+        </p>
+        <div className="mt-0.5 break-words font-medium text-slate-800">
+          {children}
+        </div>
       </div>
     </div>
   );
@@ -25,10 +37,15 @@ export default function ContactSection({ onRfq }) {
     <section id="contact" className="scroll-mt-20 bg-white">
       <div className="mx-auto max-w-7xl px-4 py-20">
         <Reveal>
-          <p className="text-sm font-semibold uppercase tracking-wider text-accent-600">Contact</p>
-          <h2 className="mt-2 text-3xl font-extrabold text-slate-900 md:text-4xl">Contact Us</h2>
+          <p className="text-sm font-semibold uppercase tracking-wider text-accent-600">
+            Contact
+          </p>
+          <h2 className="mt-2 text-3xl font-extrabold text-slate-900 md:text-4xl">
+            Contact Us
+          </h2>
           <p className="mt-3 max-w-2xl text-slate-600">
-            Send us your project requirement, BOQ or drawing. Our sourcing team will get back to you with a quotation shortly.
+            Send us your project requirement, BOQ or drawing. Our sourcing team
+            will get back to you with a quotation shortly.
           </p>
         </Reveal>
 
@@ -36,16 +53,28 @@ export default function ContactSection({ onRfq }) {
           {/* Left: details + buttons */}
           <Reveal>
             <div className="space-y-4">
-              <InfoRow icon={MapPin} label="Address">{company.address}</InfoRow>
+              <InfoRow icon={MapPin} label="Address">
+                {company.address}
+              </InfoRow>
 
               <InfoRow icon={Phone} label="Phone">
-                <a href={`tel:${tel}`} className="hover:text-blue-700">{company.phone}</a>
-                <span className="block text-sm font-normal text-slate-500">Ms. Kavita Mahapatra</span>
+                <a href={`tel:${tel}`} className="hover:text-blue-700">
+                  {company.phone}
+                </a>
+                <span className="block text-sm font-normal text-slate-500">
+                  Ms. Kavita Mahapatra
+                </span>
               </InfoRow>
 
               <InfoRow icon={Mail} label="Email">
                 {company.emails.map((e) => (
-                  <a key={e} href={`mailto:${e}`} className="block hover:text-blue-700">{e}</a>
+                  <a
+                    key={e}
+                    href={`mailto:${e}`}
+                    className="block hover:text-blue-700"
+                  >
+                    {e}
+                  </a>
                 ))}
               </InfoRow>
 
