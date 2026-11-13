@@ -1,16 +1,14 @@
-const fs = require("fs");
 const path = require("path");
 const mongoose = require("mongoose");
 const Inquiry = require("../models/Inquiry");
 const asyncHandler = require("../middleware/asyncHandler");
 const sendInquiryMail = require("../utils/sendMail");
+const storage = require("../utils/storage");
 
-const UPLOADS = path.join(__dirname, "../uploads");
 const MAX_ITEMS = 10;
 const STATUSES = ["new", "contacted", "quoted", "closed"];
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-// status + search filter (list aur CSV export dono yahi use karte hain)
 const buildFilter = (q = {}) => {
   const filter = {};
   if (STATUSES.includes(q.status)) filter.status = q.status;
@@ -34,7 +32,6 @@ const buildFilter = (q = {}) => {
   return filter;
 };
 
-// CSV cell: Excel formula injection se bachav (public form ka text Excel me khulta hai)
 const csvCell = (v) => {
   let s = v == null ? "" : String(v);
   if (/^[=+\-@\t\r]/.test(s) && !/^\+?[\d\s()-]+$/.test(s)) s = "'" + s;
@@ -45,24 +42,26 @@ const day = (d) =>
     ? new Date(d).toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" })
     : "";
 
-const removeFile = (name) =>
-  name && fs.unlink(path.join(UPLOADS, name), () => {});
-const unlinkAll = (files) =>
-  Object.values(files || {})
-    .flat()
-    .forEach((f) => fs.unlink(f.path, () => {}));
+// Stored file (disk ya R2) ko admin tak stream karta hai
+const sendStored = async (res, key, { filename, inline = false } = {}) => {
+  const file = key ? await storage.open(key) : null;
+  if (!file)
+    return res.status(404).json({ success: false, message: "File not found" });
+  res.type(path.extname(String(key)) || "application/octet-stream");
+  if (!inline) res.attachment(filename || String(key));
+  res.setHeader("Cache-Control", "private, no-store");
+  file.stream.on("error", () => res.destroy());
+  file.stream.pipe(res);
+};
 
 // POST /inquiries  (public, multipart)
-// Fields: name, email, ... , items (JSON: [{name, quantity, photoIndex}]), itemPhotos (files), attachment (file)
 exports.createInquiry = asyncHandler(async (req, res) => {
   const b = req.body || {};
   const files = req.files || {};
   const photos = files.itemPhotos || [];
   const attachment = files.attachment?.[0];
-  const fail = (code, message) => {
-    unlinkAll(files);
-    return res.status(code).json({ success: false, message });
-  };
+  const fail = (code, message) =>
+    res.status(code).json({ success: false, message }); // files memory me hain, cleanup ki zaroorat nahi
 
   if (!b.name?.trim() || !b.email?.trim())
     return fail(400, "Name and email are required");
@@ -79,42 +78,49 @@ exports.createInquiry = asyncHandler(async (req, res) => {
   if (rawItems.length > MAX_ITEMS)
     return fail(400, `You can add up to ${MAX_ITEMS} items per inquiry`);
 
-  const items = [];
-  const usedPhotos = new Set();
-  for (const r of rawItems) {
-    const name = String(r?.name || "").trim();
-    if (!name) continue;
-    const item = {
-      name: name.slice(0, 200),
-      quantity:
-        String(r.quantity || "")
-          .trim()
-          .slice(0, 100) || undefined,
-    };
-    const idx = Number.isInteger(r.photoIndex) ? r.photoIndex : -1;
-    if (photos[idx] && !usedPhotos.has(idx)) {
-      usedPhotos.add(idx);
-      item.photo = {
-        path: photos[idx].filename,
-        originalName: photos[idx].originalname,
-      };
-    }
-    items.push(item);
-  }
-  photos.forEach((p, i) => {
-    if (!usedPhotos.has(i)) fs.unlink(p.path, () => {});
-  }); // kisi item se na jude photos hata do
-
-  const productName =
-    b.productName?.trim() ||
-    items
-      .map((i) => i.name)
-      .join(", ")
-      .slice(0, 200) ||
-    undefined;
+  const saved = []; // storage me jo keys bani, taaki DB fail hone par hata sakein
+  const put = async (file) => {
+    const key = await storage.save(file);
+    saved.push(key);
+    return key;
+  };
 
   let inq;
   try {
+    const items = [];
+    const usedPhotos = new Set();
+    for (const r of rawItems) {
+      const name = String(r?.name || "").trim();
+      if (!name) continue;
+      const item = {
+        name: name.slice(0, 200),
+        quantity:
+          String(r.quantity || "")
+            .trim()
+            .slice(0, 100) || undefined,
+      };
+      const idx = Number.isInteger(r.photoIndex) ? r.photoIndex : -1;
+      if (photos[idx] && !usedPhotos.has(idx)) {
+        usedPhotos.add(idx);
+        item.photo = {
+          path: await put(photos[idx]),
+          originalName: photos[idx].originalname,
+        };
+      }
+      items.push(item);
+    }
+
+    const productName =
+      b.productName?.trim() ||
+      items
+        .map((i) => i.name)
+        .join(", ")
+        .slice(0, 200) ||
+      undefined;
+    const attachmentDoc = attachment
+      ? { path: await put(attachment), originalName: attachment.originalname }
+      : undefined;
+
     inq = await Inquiry.create({
       name: b.name,
       email: b.email,
@@ -127,22 +133,19 @@ exports.createInquiry = asyncHandler(async (req, res) => {
       deliveryLocation: b.deliveryLocation,
       requiredBy: b.requiredBy || undefined,
       message: b.message,
-      attachment: attachment
-        ? { path: attachment.filename, originalName: attachment.originalname }
-        : undefined,
+      attachment: attachmentDoc,
     });
   } catch (e) {
-    unlinkAll(files); // validation fail hone par orphan files na bachein
+    await Promise.all(saved.map((k) => storage.remove(k))); // validation fail hone par orphan files na bachein
     throw e;
   }
+
   sendInquiryMail(inq); // fire-and-forget: mail fail hone se response nahi rukta
-  res
-    .status(201)
-    .json({
-      success: true,
-      message: "Inquiry received. Our team will contact you shortly.",
-      id: inq._id,
-    });
+  res.status(201).json({
+    success: true,
+    message: "Inquiry received. Our team will contact you shortly.",
+    id: inq._id,
+  });
 });
 
 // GET /inquiries?status=&search=&page=&limit=  (admin)
@@ -178,28 +181,7 @@ exports.listInquiries = asyncHandler(async (req, res) => {
   });
 });
 
-// PATCH /inquiries/:id/notes  (admin)
-exports.updateNotes = asyncHandler(async (req, res) => {
-  if (!mongoose.isValidObjectId(req.params.id))
-    return res
-      .status(404)
-      .json({ success: false, message: "Inquiry not found" });
-  const notes = String(req.body?.notes ?? "")
-    .trim()
-    .slice(0, 2000);
-  const inq = await Inquiry.findByIdAndUpdate(
-    req.params.id,
-    { notes },
-    { new: true, runValidators: true },
-  );
-  if (!inq)
-    return res
-      .status(404)
-      .json({ success: false, message: "Inquiry not found" });
-  res.json({ success: true, item: inq });
-});
-
-// GET /inquiries/export?status=&search=  (admin) - current filter ke hisaab se CSV
+// GET /inquiries/export  (admin)
 exports.exportInquiries = asyncHandler(async (req, res) => {
   const rows = await Inquiry.find(buildFilter(req.query))
     .sort({ createdAt: -1 })
@@ -245,7 +227,7 @@ exports.exportInquiries = asyncHandler(async (req, res) => {
       .map(csvCell)
       .join(","),
   );
-  const csv = "\uFEFF" + [head.map(csvCell).join(","), ...lines].join("\r\n"); // BOM: Excel me Hindi/UTF-8 sahi dikhe
+  const csv = "\uFEFF" + [head.map(csvCell).join(","), ...lines].join("\r\n");
   res.setHeader("Content-Type", "text/csv; charset=utf-8");
   res.setHeader(
     "Content-Disposition",
@@ -268,6 +250,27 @@ exports.updateStatus = asyncHandler(async (req, res) => {
   res.json({ success: true, item: inq });
 });
 
+// PATCH /inquiries/:id/notes  (admin)
+exports.updateNotes = asyncHandler(async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.id))
+    return res
+      .status(404)
+      .json({ success: false, message: "Inquiry not found" });
+  const notes = String(req.body?.notes ?? "")
+    .trim()
+    .slice(0, 2000);
+  const inq = await Inquiry.findByIdAndUpdate(
+    req.params.id,
+    { notes },
+    { new: true, runValidators: true },
+  );
+  if (!inq)
+    return res
+      .status(404)
+      .json({ success: false, message: "Inquiry not found" });
+  res.json({ success: true, item: inq });
+});
+
 // DELETE /inquiries/:id  (admin)
 exports.deleteInquiry = asyncHandler(async (req, res) => {
   const inq = await Inquiry.findByIdAndDelete(req.params.id);
@@ -275,25 +278,31 @@ exports.deleteInquiry = asyncHandler(async (req, res) => {
     return res
       .status(404)
       .json({ success: false, message: "Inquiry not found" });
-  removeFile(inq.attachment?.path);
-  (inq.items || []).forEach((it) => removeFile(it.photo?.path));
+  const keys = [
+    inq.attachment?.path,
+    ...(inq.items || []).map((it) => it.photo?.path),
+  ].filter(Boolean);
+  await Promise.all(keys.map((k) => storage.remove(k)));
   res.json({ success: true });
 });
 
 // GET /inquiries/:id/attachment  (admin)
 exports.downloadAttachment = asyncHandler(async (req, res) => {
-  const inq = await Inquiry.findById(req.params.id);
+  if (!mongoose.isValidObjectId(req.params.id))
+    return res
+      .status(404)
+      .json({ success: false, message: "Attachment not found" });
+  const inq = await Inquiry.findById(req.params.id).select("attachment").lean();
   if (!inq?.attachment?.path)
     return res
       .status(404)
       .json({ success: false, message: "Attachment not found" });
-  res.download(
-    path.join(UPLOADS, inq.attachment.path),
-    inq.attachment.originalName,
-  );
+  await sendStored(res, inq.attachment.path, {
+    filename: inq.attachment.originalName,
+  });
 });
 
-// GET /inquiries/:id/items/:idx/photo  (admin) - photo inline serve hoti hai (dashboard me dikhane ke liye)
+// GET /inquiries/:id/items/:idx/photo  (admin) - photo inline (dashboard me dikhane ke liye)
 exports.getItemPhoto = asyncHandler(async (req, res) => {
   const notFound = () =>
     res.status(404).json({ success: false, message: "Photo not found" });
@@ -301,5 +310,5 @@ exports.getItemPhoto = asyncHandler(async (req, res) => {
   const inq = await Inquiry.findById(req.params.id).select("items").lean();
   const it = inq?.items?.[Number(req.params.idx)];
   if (!it?.photo?.path) return notFound();
-  res.sendFile(path.join(UPLOADS, it.photo.path));
+  await sendStored(res, it.photo.path, { inline: true });
 });

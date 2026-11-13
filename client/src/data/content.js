@@ -32,8 +32,8 @@ export const team = [
 ];
 
 export const clients = [
-  "NTPC",
-  "BHEL",
+  // "NTPC",
+  // "BHEL",
   "SolarWorld",
   "Gentari",
   "Aditya Birla",

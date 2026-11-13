@@ -1,7 +1,6 @@
 const express = require("express");
 const multer = require("multer");
 const path = require("path");
-const crypto = require("crypto");
 const rateLimit = require("express-rate-limit");
 const c = require("../controllers/inquiryController");
 const { protect, authorize } = require("../middleware/authMiddleware");
@@ -29,16 +28,8 @@ const badFile = (msg) =>
   });
 
 const upload = multer({
-  storage: multer.diskStorage({
-    destination: path.join(__dirname, "../uploads"),
-    filename: (req, file, cb) =>
-      cb(
-        null,
-        crypto.randomBytes(16).toString("hex") +
-          path.extname(file.originalname).toLowerCase(),
-      ),
-  }),
-  limits: { fileSize: 5 * 1024 * 1024, files: 11 }, // 1 attachment + max 10 item photos
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024, files: 11 },
   fileFilter: (req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
     if (file.fieldname === "itemPhotos") {
