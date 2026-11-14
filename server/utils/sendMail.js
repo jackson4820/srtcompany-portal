@@ -20,6 +20,160 @@ const safeFilename = (value) =>
     .replace(/[<>:"/\\|?*\x00-\x1F]/g, "_")
     .slice(0, 100);
 
+const formatDate = (date) => {
+  if (!date) return "";
+  const d = new Date(date);
+  return Number.isNaN(d.getTime())
+    ? String(date)
+    : d.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        timeZone: "Asia/Kolkata",
+      });
+};
+
+// ---- Inline styles (Gmail/Outlook ke liye <style> tag use nahi kiya) ----
+const FONT = "Arial,Helvetica,sans-serif";
+const TH = `padding:8px 10px;border:1px solid #c4c9d0;background:#f1f3f6;font:bold 13px ${FONT};color:#1f2933;text-align:left;`;
+const TD = `padding:8px 10px;border:1px solid #c4c9d0;font:13px ${FONT};color:#1f2933;vertical-align:top;`;
+const P = `margin:0 0 12px;font:14px/1.6 ${FONT};color:#1f2933;`;
+
+// Email ka content banata hai (HTML + plain text + subject)
+function buildEmail(inq, { photoCids = {} } = {}) {
+  const items = Array.from(inq.items || []);
+  const cc = Array.from(inq.cc || []);
+
+  const first = items[0];
+  const label = first
+    ? `${first.name}${
+        items.length > 1
+          ? ` +${items.length - 1} more`
+          : first.quantity
+            ? ` (${first.quantity})`
+            : ""
+      }`
+    : inq.productName || inq.projectName || "New Enquiry";
+
+  const subject = [`RFQ: ${label}`, inq.projectName, inq.company || inq.name]
+    .filter(Boolean)
+    .join(" | ")
+    .replace(/[\r\n]+/g, " ")
+    .slice(0, 180);
+
+  const detailRows = [
+    ["Name", inq.name],
+    ["Company", inq.company],
+    ["Email", inq.email, `mailto:${inq.email}`],
+    ["Phone", inq.phone, inq.phone && `tel:${inq.phone.replace(/\s/g, "")}`],
+    ["Project", inq.projectName],
+    ["Delivery Location", inq.deliveryLocation],
+    ["Required By", formatDate(inq.requiredBy)],
+    ["CC", cc.join(", ")],
+  ].filter(([, value]) => value);
+
+  const detailHtml = detailRows
+    .map(
+      ([key, value, href]) => `
+        <tr>
+          <td style="${TH}width:32%;">${escapeHtml(key)}</td>
+          <td style="${TD}">${
+            href
+              ? `<a href="${escapeHtml(href)}" style="color:#1155cc;text-decoration:none;">${escapeHtml(value)}</a>`
+              : escapeHtml(value)
+          }</td>
+        </tr>`,
+    )
+    .join("");
+
+  const itemRows = items.length
+    ? items
+        .map((it, i) => {
+          const cid = photoCids[i];
+          return `
+        <tr>
+          <td style="${TD}text-align:center;width:44px;">${i + 1}</td>
+          <td style="${TD}">${escapeHtml(it.name || "Item")}${
+            cid
+              ? `<br><img src="cid:${cid}" alt="${escapeHtml(it.name || "Item photo")}" width="90" style="margin-top:6px;border:1px solid #c4c9d0;max-width:90px;height:auto;display:block;">`
+              : ""
+          }</td>
+          <td style="${TD}text-align:center;width:90px;">${escapeHtml(it.quantity || "-")}</td>
+        </tr>`;
+        })
+        .join("")
+    : `
+        <tr>
+          <td style="${TD}text-align:center;">1</td>
+          <td style="${TD}">${escapeHtml(inq.productName || "Item details not provided")}</td>
+          <td style="${TD}text-align:center;">${escapeHtml(inq.quantity || "-")}</td>
+        </tr>`;
+
+  // Sirf wahi jo client ne message box me likha (kuch extra nahi)
+  const messageHtml = inq.message
+    ? `
+      <p style="${P}margin-bottom:6px;"><b>Customer message:</b></p>
+      <div style="margin:0 0 16px;padding:10px 14px;border-left:3px solid #c4c9d0;font:14px/1.6 ${FONT};color:#1f2933;white-space:pre-wrap;">${escapeHtml(inq.message)}</div>`
+    : "";
+
+  const html = `<!doctype html>
+<html>
+<body style="margin:0;padding:0;background:#ffffff;">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#ffffff;">
+<tr><td align="left" style="padding:16px;">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:680px;">
+<tr><td>
+
+  <p style="${P}">Dear Team,</p>
+  <p style="${P}">A new Request for Quotation has been received through the S.R. Trading Company website. Please find the details below.</p>
+
+  <p style="${P}margin-bottom:6px;"><b>Material requirement</b></p>
+  <table width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;margin:0 0 16px;">
+    <tr>
+      <th style="${TH}text-align:center;">Sr.</th>
+      <th style="${TH}">Material Description</th>
+      <th style="${TH}text-align:center;">Qty</th>
+    </tr>
+    ${itemRows}
+  </table>
+
+  <p style="${P}margin-bottom:6px;"><b>Customer &amp; project details</b></p>
+  <table width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;margin:0 0 16px;">
+    ${detailHtml}
+  </table>
+
+  ${messageHtml}
+
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>`;
+
+  const text = [
+    "Dear Team,",
+    "",
+    "A new Request for Quotation has been received through the S.R. Trading Company website. Please find the details below.",
+    "",
+    "MATERIAL REQUIREMENT",
+    ...(items.length
+      ? items.map(
+          (it, i) =>
+            `${i + 1}. ${it.name} - Qty: ${it.quantity || "-"}${it.photo?.path ? " (photo attached)" : ""}`,
+        )
+      : [
+          `1. ${inq.productName || "Item details not provided"} - Qty: ${inq.quantity || "-"}`,
+        ]),
+    "",
+    "CUSTOMER & PROJECT DETAILS",
+    ...detailRows.map(([key, value]) => `${key}: ${value}`),
+    ...(inq.message ? ["", "CUSTOMER MESSAGE", inq.message] : []),
+  ].join("\n");
+
+  return { subject, html, text };
+}
+
 module.exports = async function sendInquiryMail(inq) {
   const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, INQUIRY_TO } =
     process.env;
@@ -34,256 +188,83 @@ module.exports = async function sendInquiryMail(inq) {
       host: SMTP_HOST,
       port: Number(SMTP_PORT) || 587,
       secure: Number(SMTP_PORT) === 465,
-      auth: {
-        user: SMTP_USER,
-        pass: SMTP_PASS,
-      },
+      auth: { user: SMTP_USER, pass: SMTP_PASS },
     });
 
-    const items = inq.items || [];
+    const items = Array.from(inq.items || []);
     const attachments = [];
+    const failed = []; // jo file read nahi ho payi (sirf server log me)
+    const photoCids = {}; // item index -> inline image cid
     const addedKeys = new Set();
 
-    // Storage se file read karke email attachment banana.
-    // Ye Local Disk aur Cloudflare R2 dono ke saath kaam karega.
-    const addStoredAttachment = async (file, filename) => {
-      if (!file?.path || addedKeys.has(file.path)) return;
-
-      const buffer = await storage.getBuffer(file.path);
-
-      attachments.push({
-        filename: safeFilename(filename || file.originalName || file.path),
-        content: buffer,
-      });
-
-      addedKeys.add(file.path);
+    // Ek file ka read fail ho to poori email na ruke
+    const addStored = async (file, filename, extra = {}) => {
+      if (!file?.path || addedKeys.has(file.path)) return false;
+      const name = safeFilename(filename || file.originalName || file.path);
+      try {
+        const buffer = await storage.getBuffer(file.path);
+        attachments.push({ filename: name, content: buffer, ...extra });
+        addedKeys.add(file.path);
+        return true;
+      } catch (error) {
+        console.error(`Attachment read failed (${name}):`, error.message);
+        failed.push(name);
+        return false;
+      }
     };
 
-    // Item photos
+    // Item photos (inline thumbnail + attachment)
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
-
-      if (item.photo?.path) {
-        const safe = safeFilename(item.name || "item");
-        const ext = path.extname(item.photo.path);
-
-        await addStoredAttachment(item.photo, `item${i + 1}_${safe}${ext}`);
-      }
+      if (!item.photo?.path) continue;
+      const ext = path.extname(item.photo.path);
+      const cid = `item${i + 1}-${Date.now()}@srt`;
+      const ok = await addStored(
+        item.photo,
+        `item${i + 1}_${safeFilename(item.name || "item")}${ext}`,
+        { cid },
+      );
+      if (ok) photoCids[i] = cid;
     }
 
-    // New multiple RFQ / BOQ attachments
+    // RFQ / BOQ attachments
     for (const file of inq.attachments || []) {
-      await addStoredAttachment(file, file.originalName || file.path);
+      await addStored(file, file.originalName || file.path);
     }
 
-    // Old single attachment support
-    // Duplicate file automatically skip ho jayegi.
+    // Old single attachment (duplicate automatically skip)
     if (inq.attachment?.path) {
-      await addStoredAttachment(
+      await addStored(
         inq.attachment,
         inq.attachment.originalName || inq.attachment.path,
       );
     }
 
-    const first = items[0]?.name;
+    const { subject, html, text } = buildEmail(inq, { photoCids });
 
-    const label = first
-      ? `${first}${items.length > 1 ? ` +${items.length - 1} more` : ""}`
-      : inq.productName || inq.projectName || inq.name || "New Enquiry";
-
-    const formatDate = (date) => {
-      if (!date) return "";
-
-      const d = new Date(date);
-
-      return Number.isNaN(d.getTime())
-        ? String(date)
-        : d.toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          });
-    };
-
-    const detailRows = [
-      ["Customer Name", inq.name],
-      ["Company", inq.company],
-      ["Email", inq.email],
-      ["Phone", inq.phone],
-      ["Project", inq.projectName],
-      ["Delivery Location", inq.deliveryLocation],
-      ["Required By", formatDate(inq.requiredBy)],
-      ["Quantity", inq.quantity],
-    ].filter(([, value]) => value);
-
-    const detailHtml = detailRows
-      .map(
-        ([key, value]) => `
-          <tr>
-            <td style="padding:11px 12px;border-bottom:1px solid #e8edf3;color:#64748b;width:38%;font-size:13px;">
-              ${escapeHtml(key)}
-            </td>
-            <td style="padding:11px 12px;border-bottom:1px solid #e8edf3;color:#172033;font-size:14px;font-weight:600;">
-              ${escapeHtml(value)}
-            </td>
-          </tr>
-        `,
-      )
-      .join("");
-
-    const itemHtml = items.length
-      ? items
-          .map(
-            (it, i) => `
-              <tr>
-                <td style="padding:12px;border-bottom:1px solid #e8edf3;color:#334155;">
-                  ${i + 1}. ${escapeHtml(it.name || "Product")}
-                  ${
-                    it.photo?.path
-                      ? '<div style="font-size:11px;color:#64748b;">Photo attached</div>'
-                      : ""
-                  }
-                </td>
-                <td style="padding:12px;border-bottom:1px solid #e8edf3;text-align:right;font-weight:600;color:#172033;">
-                  ${escapeHtml(it.quantity || "—")}
-                </td>
-              </tr>
-            `,
-          )
-          .join("")
-      : `
-          <tr>
-            <td style="padding:12px;">
-              ${escapeHtml(inq.productName || "Product details not provided")}
-            </td>
-            <td style="padding:12px;text-align:right;">
-              ${escapeHtml(inq.quantity || "—")}
-            </td>
-          </tr>
-        `;
-
-    const messageHtml = inq.message
-      ? `
-          <div style="background:#f8fafc;border:1px solid #e8edf3;border-radius:8px;padding:16px;color:#334155;font-size:14px;line-height:1.7;white-space:pre-wrap;">
-            ${escapeHtml(inq.message)}
-          </div>
-        `
-      : '<p style="color:#64748b;">No additional message provided.</p>';
-
-    const text = [
-      "NEW REQUEST FOR QUOTATION",
-      "",
-      ...detailRows.map(([key, value]) => `${key}: ${value}`),
-      "",
-      "REQUESTED MATERIALS",
-      ...items.map(
-        (it, i) => `${i + 1}. ${it.name} - Qty: ${it.quantity || "—"}`,
-      ),
-      "",
-      "CUSTOMER MESSAGE",
-      inq.message || "No additional message provided.",
-      "",
-      `Attachments: ${attachments.length} file(s)`,
-    ].join("\n");
-
-    const html = `
-      <div style="margin:0;padding:24px 10px;background:#f1f5f9;font-family:Arial,Helvetica,sans-serif;">
-        <div style="max-width:680px;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
-
-          <div style="background:#142b45;padding:24px 28px;color:#ffffff;">
-            <div style="font-size:22px;font-weight:700;letter-spacing:1px;">S.R. TRADING</div>
-            <div style="font-size:12px;color:#cbd5e1;margin-top:5px;">Website Enquiry Notification</div>
-          </div>
-
-          <div style="padding:26px 28px 10px;">
-            <div style="display:inline-block;background:#e8f2ff;color:#1557a0;padding:7px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:1px;">
-              NEW RFQ
-            </div>
-            <h2 style="font-size:23px;color:#142b45;margin:16px 0 6px;">New Request for Quotation</h2>
-            <p style="font-size:13px;color:#64748b;margin:0;">
-              A new enquiry has been submitted through your company website.
-            </p>
-          </div>
-
-          <div style="padding:18px 28px;">
-            <h3 style="font-size:16px;color:#142b45;margin:0 0 12px;">Customer Details</h3>
-            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border:1px solid #e8edf3;border-radius:8px;border-collapse:separate;border-spacing:0;">
-              ${detailHtml}
-            </table>
-          </div>
-
-          <div style="padding:10px 28px 20px;">
-            <h3 style="font-size:16px;color:#142b45;margin:0 0 12px;">Requested Materials</h3>
-            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border:1px solid #e8edf3;border-radius:8px;border-collapse:separate;border-spacing:0;">
-              <tr style="background:#f1f5f9;">
-                <th align="left" style="padding:12px;font-size:12px;color:#475569;">Product / Material</th>
-                <th align="right" style="padding:12px;font-size:12px;color:#475569;">Quantity</th>
-              </tr>
-              ${itemHtml}
-            </table>
-          </div>
-
-          <div style="padding:10px 28px 24px;">
-            <h3 style="font-size:16px;color:#142b45;margin:0 0 12px;">Customer Message</h3>
-            ${messageHtml}
-          </div>
-
-          ${
-            attachments.length
-              ? `
-                <div style="padding:0 28px 22px;color:#475569;font-size:13px;">
-                  <strong>Attachments:</strong> ${attachments.length} file(s) attached.
-                </div>
-              `
-              : ""
-          }
-
-          <div style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:20px 28px;text-align:center;">
-            <div style="font-size:13px;font-weight:700;color:#142b45;">S.R. Trading</div>
-            <div style="font-size:11px;color:#64748b;margin-top:5px;">
-              Automated RFQ notification from SRT Company Website
-            </div>
-          </div>
-
-        </div>
-      </div>
-    `;
-
-    // Client ke CC/BCC addresses
-    const cc = Array.isArray(inq.cc) ? inq.cc : [];
-    const bcc = Array.isArray(inq.bcc) ? inq.bcc : [];
+    const cc = Array.from(inq.cc || []);
+    const bcc = Array.from(inq.bcc || []);
 
     const mailOptions = {
-      // Actual sender authenticated SRT email hi rahega.
       from: `"S.R. Trading Website" <${SMTP_USER}>`,
-
-      // Company receiving email
       to: INQUIRY_TO || "srtsales4820@gmail.com",
-
-      // Client ko reply karne ke liye
-      replyTo: {
-        name: inq.name || "Customer",
-        address: inq.email,
-      },
-
-      subject: `New RFQ: ${String(label).replace(/[\r\n]+/g, " ")}`,
+      replyTo: { name: inq.name || "Customer", address: inq.email },
+      subject,
       text,
       html,
       attachments,
     };
-
-    if (cc.length) {
-      mailOptions.cc = cc;
-    }
-
-    if (bcc.length) {
-      mailOptions.bcc = bcc;
-    }
+    if (cc.length) mailOptions.cc = cc;
+    if (bcc.length) mailOptions.bcc = bcc;
 
     await t.sendMail(mailOptions);
 
-    console.log("Inquiry email sent successfully:", inq._id || inq.email);
+    console.log(
+      `Inquiry email sent: ${inq._id || inq.email} | attachments: ${attachments.length}${failed.length ? ` | failed: ${failed.length}` : ""}`,
+    );
   } catch (error) {
     console.error("Inquiry mail failed:", error.message);
   }
 };
+
+module.exports.buildEmail = buildEmail;

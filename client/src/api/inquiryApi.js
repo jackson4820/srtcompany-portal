@@ -52,6 +52,9 @@ export const createInquiry = (data, files = [], items = []) => {
   return axiosClient
     .post("/inquiries", fd, {
       timeout: 90000,
+      // axiosClient ka default JSON header FormData ko JSON bana deta hai (files gayab ho jati hain).
+      // multipart set karne par browser khud boundary lagata hai aur files server tak jaati hain.
+      headers: { "Content-Type": "multipart/form-data" },
     })
     .then((response) => response.data);
 };
