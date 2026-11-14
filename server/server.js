@@ -5,6 +5,11 @@ const helmet = require("helmet");
 const connectDB = require("./config/db");
 const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 
+if (!process.env.JWT_SECRET) {
+  console.error("Startup failed: JWT_SECRET is not set in .env");
+  process.exit(1);
+}
+
 const app = express();
 app.set("trust proxy", 1); // Render/Railway/Nginx ke peeche rate-limit sahi chalne ke liye
 

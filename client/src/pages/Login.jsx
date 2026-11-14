@@ -5,24 +5,30 @@ import { errMsg } from "../api/axiosClient";
 import Seo from "../components/Seo";
 
 export default function Login() {
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
-  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
+  if (isAuthenticated)
+    return (
+      <Navigate to={user?.role === "admin" ? "/dashboard" : "/"} replace />
+    );
 
   const submit = async (e) => {
     e.preventDefault();
     setError("");
     setBusy(true);
     try {
-      await login(form.email, form.password);
-      navigate(location.state?.from?.pathname || "/dashboard", {
-        replace: true,
-      });
+      const loggedIn = await login(form.email, form.password);
+      navigate(
+        loggedIn.role === "admin"
+          ? location.state?.from?.pathname || "/dashboard"
+          : "/",
+        { replace: true },
+      );
     } catch (err) {
       setError(errMsg(err));
     } finally {

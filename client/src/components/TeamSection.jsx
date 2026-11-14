@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Phone } from "lucide-react";
 import { team } from "../data/content";
 import Reveal from "./Reveal";
@@ -7,14 +7,22 @@ const initial = (name) => name.replace(/^(Mr|Ms|Mrs)\.?\s+/, "")[0];
 
 function TeamCard({ m }) {
   const [imgFailed, setImgFailed] = useState(false);
+  const imgRef = useRef(null);
   const showPhoto = m.photo && !imgFailed;
+
+  // Catch images that failed before hydration attached onError
+  useEffect(() => {
+    const el = imgRef.current;
+    if (el && el.complete && el.naturalWidth === 0) setImgFailed(true);
+  }, []);
 
   return (
     <div className="group h-full overflow-hidden rounded-2xl border bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl">
-      {/* Top: person ki photo (photo na mile to initial wala gradient dikhega) */}
+      {/* Top: photo (falls back to the initial on a gradient if the photo is missing) */}
       <div className="relative h-72 w-full overflow-hidden bg-gradient-to-br from-blue-700 to-blue-500">
         {showPhoto ? (
           <img
+            ref={imgRef}
             src={m.photo}
             alt={m.name}
             loading="lazy"
@@ -28,7 +36,7 @@ function TeamCard({ m }) {
         )}
       </div>
 
-      {/* Neeche: details */}
+      {/* Bottom: details */}
       <div className="border-t-4 border-accent-500 p-5 text-center">
         <h3 className="text-lg font-bold text-slate-900">{m.name}</h3>
         <p className="mt-1 text-sm font-medium text-blue-700">{m.role}</p>

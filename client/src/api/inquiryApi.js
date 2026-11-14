@@ -1,34 +1,57 @@
 import axiosClient from "./axiosClient";
 
-// data: plain object | file: BOQ File ya null | items: [{ name, quantity, file }]
-export const createInquiry = (data, file, items = []) => {
-  const fd = new FormData();
-  Object.entries(data).forEach(([k, v]) => {
-    if (v) fd.append(k, v);
-  });
-  if (file) fd.append("attachment", file);
+// data: form fields
+// files: RFQ/BOQ files array (old single File format bhi supported)
+// items: [{ name, quantity, file }]
 
-  // Har item ki photo "itemPhotos" me jaati hai; items JSON me photoIndex se pata chalta hai kis item ki kaun si photo hai
-  const photos = [];
-  const payload = items.map((it) => {
-    let photoIndex = null;
-    if (it.file) {
-      photoIndex = photos.length;
-      photos.push(it.file);
+export const createInquiry = (data, files = [], items = []) => {
+  const fd = new FormData();
+
+  // Form fields: name, email, phone, company, cc, bcc, etc.
+  Object.entries(data || {}).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && String(value).trim() !== "") {
+      fd.append(key, value);
     }
+  });
+
+  // Single File ya multiple Files dono support honge.
+  const attachments = Array.isArray(files) ? files : files ? [files] : [];
+
+  // Backend multer field name: attachments
+  attachments.forEach((file) => {
+    fd.append("attachments", file);
+  });
+
+  // Har item ki photo itemPhotos field me jayegi.
+  // items JSON me photoIndex se photo identify hogi.
+  const photos = [];
+
+  const payload = (items || []).map((item) => {
+    let photoIndex = null;
+
+    if (item.file) {
+      photoIndex = photos.length;
+      photos.push(item.file);
+    }
+
     return {
-      name: it.name.trim(),
-      quantity: (it.quantity || "").trim(),
+      name: (item.name || "").trim(),
+      quantity: (item.quantity || "").trim(),
       photoIndex,
     };
   });
-  if (payload.length) fd.append("items", JSON.stringify(payload));
-  photos.forEach((p) => fd.append("itemPhotos", p));
+
+  if (payload.length) {
+    fd.append("items", JSON.stringify(payload));
+  }
+
+  photos.forEach((photo) => {
+    fd.append("itemPhotos", photo);
+  });
 
   return axiosClient
     .post("/inquiries", fd, {
-      headers: { "Content-Type": "multipart/form-data" },
       timeout: 90000,
     })
-    .then((r) => r.data);
+    .then((response) => response.data);
 };

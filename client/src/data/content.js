@@ -1,4 +1,4 @@
-// Company content: yahin se edit karein
+// Company content: edit here
 export const company = {
   name: "S.R. Trading Company",
   shortName: "S.R.T.",
@@ -10,8 +10,7 @@ export const company = {
     "S.R.T. Company is a project associate for EPC and solar industries. Through our trading division, S.R. Trading Company, we source and supply electrical equipment, cables, instruments, safety products, earthing materials and hardware to project sites across India.",
   address: "101, GF, Rani Jhansi Road, Model Basti, New Delhi-110005",
   phone: "+91 9311764338",
-  // WhatsApp number: country code ke saath, bina + ya space ke. Abhi company phone wala hi number hai;
-  // agar WhatsApp kisi aur number par chalta hai to yahan badal dein.
+  // WhatsApp number: include the country code, with no "+" or spaces. Currently the same as the company phone.
   whatsapp: "919311764338",
   emails: ["srtquotation6@gmail.com", "srtsent@gmail.com"],
 };
@@ -20,14 +19,13 @@ export const team = [
   {
     name: "Mr. Sukhmeet",
     role: "Director / Company Head",
-    photo: "/images/team/sukhmeet.jpg", // photo yahan: client/public/images/team/sukhmeet.jpg
+    photo: "/images/team/sukhmeet.jpg", // file: client/public/images/team/sukhmeet.jpg
   },
   {
     name: "Ms. Kavita Mahapatra",
     role: "Sourcing Department",
-    // note: "Sourcing Department",
     phone: "+91 9311764338",
-    photo: "/images/team/kavita.jpg", // photo yahan: client/public/images/team/kavita.jpg
+    photo: "/images/team/kavita.jpg", // file: client/public/images/team/kavita.jpg
   },
 ];
 
@@ -49,7 +47,7 @@ export const clients = [
   "Sekura",
 ];
 
-// Client logos (marquee ke liye). Naya client: logo /public/images/clients/ me daalo aur yaha ek line add karo.
+// Client logos for the marquee. To add a client: put the logo in /public/images/clients/ and add a line here.
 export const clientLogos = [
   { name: "NTPC", logo: "/images/clients/ntpc.png" },
   { name: "BHEL", logo: "/images/clients/bhel.png" },
@@ -71,7 +69,7 @@ export const clientLogos = [
   { name: "Sekura", logo: "/images/clients/sekura.png" },
 ];
 
-// Search engine / social share text. Title ~60 aur description ~155 characters tak rakhein.
+// Search engine / social share text. Keep titles around 60 characters and descriptions around 155.
 export const seo = {
   home: {
     title:
@@ -84,31 +82,14 @@ export const seo = {
   },
 };
 
-// ===== TRUST / CREDENTIALS =====
-// Neeche sirf wahi bharein jo sach aur documented ho. Khali chhodne par website par woh item dikhega hi nahi.
-// Poora "Credentials" section tabhi dikhta hai jab kam se kam ek item bhara ho.
-// export const credentials = {
-//   // Chhote fact cards (label + value). Example (apni asli details dalein):
-//   //   { label: "GST Number", value: "07XXXXXXXXXXXXX" },
-//   //   { label: "Established", value: "20XX" },
-//   //   { label: "Udyam / MSME", value: "UDYAM-DL-XX-XXXXXXX" },
-//   facts: [],
-
-//   // Certificates / registrations. Image ya PDF /public/images/certificates/ ya /public/docs/ mein rakhein.
-//   // Example:
-//   //   { name: "ISO 9001:2015", issuer: "Certifying body ka naam", image: "/images/certificates/iso-9001.jpg" },
-//   certificates: [],
-
-//   // Company profile PDF ka link, jaise "/docs/srt-company-profile.pdf" (file client/public/docs/ mein rakhein).
-//   // Bharne par product pages aur Contact mein "Download Company Profile" button aa jayega.
-//   profilePdf: "",
-// };
-
+// ===== CREDENTIALS =====
+// Only list details that are accurate and documented.
+// facts: small label/value cards. certificates: name, issuer, cover image and page images.
+// profilePdf: link to the company profile PDF (file lives in client/public/docs/).
 export const credentials = {
   facts: [
-    { label: "GST Number", value: "07AAEPT6321M1ZD" }, // ← apna asli 15-digit GSTIN
+    { label: "GST Number", value: "07AAEPT6321M1ZD" },
     { label: "Legal Name", value: "SUKHMEET SINGH TALWAR" },
-    { label: "Established", value: "20XX" }, // ← sach ho tabhi
   ],
 
   certificates: [

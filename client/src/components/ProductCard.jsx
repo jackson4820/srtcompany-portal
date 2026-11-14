@@ -1,11 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ImageOff } from "lucide-react";
 import { productPath } from "../data/catalog";
 
 export function ProductImage({ src, alt, className = "", contain = false }) {
   const [failed, setFailed] = useState(false);
-  useEffect(() => setFailed(false), [src]);
+  const imgRef = useRef(null);
+
+  // Reset on src change. Also catch images that already failed before React
+  // attached onError (prerendered HTML is hydrated, so the error event can be missed).
+  useEffect(() => {
+    const el = imgRef.current;
+    setFailed(!!el && el.complete && el.naturalWidth === 0);
+  }, [src]);
+
   if (failed)
     return (
       <div
@@ -17,6 +25,7 @@ export function ProductImage({ src, alt, className = "", contain = false }) {
     );
   return (
     <img
+      ref={imgRef}
       src={src}
       alt={alt}
       loading="lazy"
@@ -26,7 +35,7 @@ export function ProductImage({ src, alt, className = "", contain = false }) {
   );
 }
 
-// Card ab product ke apne page par le jaata hai (/products/<category>/<slug>)
+// The card links to the product page: /products/<category>/<slug>
 export default function ProductCard({ item, categoryId, showCategory }) {
   return (
     <Link

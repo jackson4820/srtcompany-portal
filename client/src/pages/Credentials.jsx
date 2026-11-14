@@ -48,8 +48,7 @@ function CertificateViewer({ cert, pages, onClose }) {
         <div className="min-w-0">
           <p className="truncate font-semibold">{cert.name}</p>
           <p className="text-xs text-slate-300">
-            {pages.length} page{pages.length > 1 ? "s" : ""} · scroll karke
-            dekhein
+            {pages.length} page{pages.length > 1 ? "s" : ""} · scroll to view
           </p>
         </div>
         <button

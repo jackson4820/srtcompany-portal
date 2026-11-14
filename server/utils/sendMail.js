@@ -1,64 +1,101 @@
-
 const nodemailer = require("nodemailer");
 const path = require("path");
-
-const UPLOADS = path.join(__dirname, "../uploads");
+const storage = require("./storage");
 
 const escapeHtml = (value) =>
-  String(value ?? "").replace(/[&<>"']/g, (char) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;",
-  })[char]);
+  String(value ?? "").replace(
+    /[&<>"']/g,
+    (char) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+      })[char],
+  );
+
+const safeFilename = (value) =>
+  String(value || "file")
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, "_")
+    .slice(0, 100);
 
 module.exports = async function sendInquiryMail(inq) {
   const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, INQUIRY_TO } =
     process.env;
 
-  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) return;
+  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
+    console.warn("Inquiry mail skipped: SMTP configuration missing.");
+    return;
+  }
 
   try {
     const t = nodemailer.createTransport({
       host: SMTP_HOST,
       port: Number(SMTP_PORT) || 587,
       secure: Number(SMTP_PORT) === 465,
-      auth: { user: SMTP_USER, pass: SMTP_PASS },
+      auth: {
+        user: SMTP_USER,
+        pass: SMTP_PASS,
+      },
     });
 
     const items = inq.items || [];
-
     const attachments = [];
+    const addedKeys = new Set();
 
-    items.forEach((it, i) => {
-      if (it.photo?.path) {
-        const safe = (it.name || "item")
-          .replace(/[^\w\-]+/g, "_")
-          .slice(0, 40);
+    // Storage se file read karke email attachment banana.
+    // Ye Local Disk aur Cloudflare R2 dono ke saath kaam karega.
+    const addStoredAttachment = async (file, filename) => {
+      if (!file?.path || addedKeys.has(file.path)) return;
 
-        attachments.push({
-          filename: `item${i + 1}_${safe}${path.extname(it.photo.path)}`,
-          path: path.join(UPLOADS, it.photo.path),
-        });
-      }
-    });
+      const buffer = await storage.getBuffer(file.path);
 
-    if (inq.attachment?.path) {
       attachments.push({
-        filename: inq.attachment.originalName || inq.attachment.path,
-        path: path.join(UPLOADS, inq.attachment.path),
+        filename: safeFilename(filename || file.originalName || file.path),
+        content: buffer,
       });
+
+      addedKeys.add(file.path);
+    };
+
+    // Item photos
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+
+      if (item.photo?.path) {
+        const safe = safeFilename(item.name || "item");
+        const ext = path.extname(item.photo.path);
+
+        await addStoredAttachment(item.photo, `item${i + 1}_${safe}${ext}`);
+      }
+    }
+
+    // New multiple RFQ / BOQ attachments
+    for (const file of inq.attachments || []) {
+      await addStoredAttachment(file, file.originalName || file.path);
+    }
+
+    // Old single attachment support
+    // Duplicate file automatically skip ho jayegi.
+    if (inq.attachment?.path) {
+      await addStoredAttachment(
+        inq.attachment,
+        inq.attachment.originalName || inq.attachment.path,
+      );
     }
 
     const first = items[0]?.name;
+
     const label = first
       ? `${first}${items.length > 1 ? ` +${items.length - 1} more` : ""}`
-      : inq.productName || inq.projectName || inq.name;
+      : inq.productName || inq.projectName || inq.name || "New Enquiry";
 
     const formatDate = (date) => {
       if (!date) return "";
+
       const d = new Date(date);
+
       return Number.isNaN(d.getTime())
         ? String(date)
         : d.toLocaleDateString("en-IN", {
@@ -79,40 +116,58 @@ module.exports = async function sendInquiryMail(inq) {
       ["Quantity", inq.quantity],
     ].filter(([, value]) => value);
 
-    const detailHtml = detailRows.map(([key, value]) => `
-      <tr>
-        <td style="padding:11px 12px;border-bottom:1px solid #e8edf3;color:#64748b;width:38%;font-size:13px;">
-          ${escapeHtml(key)}
-        </td>
-        <td style="padding:11px 12px;border-bottom:1px solid #e8edf3;color:#172033;font-size:14px;font-weight:600;">
-          ${escapeHtml(value)}
-        </td>
-      </tr>
-    `).join("");
-
-    const itemHtml = items.length
-      ? items.map((it, i) => `
+    const detailHtml = detailRows
+      .map(
+        ([key, value]) => `
           <tr>
-            <td style="padding:12px;border-bottom:1px solid #e8edf3;color:#334155;">
-              ${i + 1}. ${escapeHtml(it.name || "Product")}
-              ${it.photo?.path ? '<div style="font-size:11px;color:#64748b;">Photo attached</div>' : ""}
+            <td style="padding:11px 12px;border-bottom:1px solid #e8edf3;color:#64748b;width:38%;font-size:13px;">
+              ${escapeHtml(key)}
             </td>
-            <td style="padding:12px;border-bottom:1px solid #e8edf3;text-align:right;font-weight:600;color:#172033;">
-              ${escapeHtml(it.quantity || "—")}
+            <td style="padding:11px 12px;border-bottom:1px solid #e8edf3;color:#172033;font-size:14px;font-weight:600;">
+              ${escapeHtml(value)}
             </td>
           </tr>
-        `).join("")
+        `,
+      )
+      .join("");
+
+    const itemHtml = items.length
+      ? items
+          .map(
+            (it, i) => `
+              <tr>
+                <td style="padding:12px;border-bottom:1px solid #e8edf3;color:#334155;">
+                  ${i + 1}. ${escapeHtml(it.name || "Product")}
+                  ${
+                    it.photo?.path
+                      ? '<div style="font-size:11px;color:#64748b;">Photo attached</div>'
+                      : ""
+                  }
+                </td>
+                <td style="padding:12px;border-bottom:1px solid #e8edf3;text-align:right;font-weight:600;color:#172033;">
+                  ${escapeHtml(it.quantity || "—")}
+                </td>
+              </tr>
+            `,
+          )
+          .join("")
       : `
           <tr>
-            <td style="padding:12px;">${escapeHtml(inq.productName || "Product details not provided")}</td>
-            <td style="padding:12px;text-align:right;">${escapeHtml(inq.quantity || "—")}</td>
+            <td style="padding:12px;">
+              ${escapeHtml(inq.productName || "Product details not provided")}
+            </td>
+            <td style="padding:12px;text-align:right;">
+              ${escapeHtml(inq.quantity || "—")}
+            </td>
           </tr>
         `;
 
     const messageHtml = inq.message
       ? `
-        <div style="background:#f8fafc;border:1px solid #e8edf3;border-radius:8px;padding:16px;color:#334155;font-size:14px;line-height:1.7;white-space:pre-wrap;">${escapeHtml(inq.message)}</div>
-      `
+          <div style="background:#f8fafc;border:1px solid #e8edf3;border-radius:8px;padding:16px;color:#334155;font-size:14px;line-height:1.7;white-space:pre-wrap;">
+            ${escapeHtml(inq.message)}
+          </div>
+        `
       : '<p style="color:#64748b;">No additional message provided.</p>';
 
     const text = [
@@ -121,10 +176,14 @@ module.exports = async function sendInquiryMail(inq) {
       ...detailRows.map(([key, value]) => `${key}: ${value}`),
       "",
       "REQUESTED MATERIALS",
-      ...items.map((it, i) => `${i + 1}. ${it.name} - Qty: ${it.quantity || "—"}`),
+      ...items.map(
+        (it, i) => `${i + 1}. ${it.name} - Qty: ${it.quantity || "—"}`,
+      ),
       "",
       "CUSTOMER MESSAGE",
       inq.message || "No additional message provided.",
+      "",
+      `Attachments: ${attachments.length} file(s)`,
     ].join("\n");
 
     const html = `
@@ -169,11 +228,15 @@ module.exports = async function sendInquiryMail(inq) {
             ${messageHtml}
           </div>
 
-          ${attachments.length ? `
-            <div style="padding:0 28px 22px;color:#475569;font-size:13px;">
-              <strong>Attachments:</strong> ${attachments.length} file(s) attached.
-            </div>
-          ` : ""}
+          ${
+            attachments.length
+              ? `
+                <div style="padding:0 28px 22px;color:#475569;font-size:13px;">
+                  <strong>Attachments:</strong> ${attachments.length} file(s) attached.
+                </div>
+              `
+              : ""
+          }
 
           <div style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:20px 28px;text-align:center;">
             <div style="font-size:13px;font-weight:700;color:#142b45;">S.R. Trading</div>
@@ -186,16 +249,41 @@ module.exports = async function sendInquiryMail(inq) {
       </div>
     `;
 
-    await t.sendMail({
+    // Client ke CC/BCC addresses
+    const cc = Array.isArray(inq.cc) ? inq.cc : [];
+    const bcc = Array.isArray(inq.bcc) ? inq.bcc : [];
+
+    const mailOptions = {
+      // Actual sender authenticated SRT email hi rahega.
       from: `"S.R. Trading Website" <${SMTP_USER}>`,
-      to: INQUIRY_TO || "srtquotation6@gmail.com",
-      replyTo: inq.email,
-      subject: `New RFQ: ${label}`,
+
+      // Company receiving email
+      to: INQUIRY_TO || "srtsales4820@gmail.com",
+
+      // Client ko reply karne ke liye
+      replyTo: {
+        name: inq.name || "Customer",
+        address: inq.email,
+      },
+
+      subject: `New RFQ: ${String(label).replace(/[\r\n]+/g, " ")}`,
       text,
       html,
       attachments,
-    });
-  } catch (e) {
-    console.error("Inquiry mail failed:", e.message);
+    };
+
+    if (cc.length) {
+      mailOptions.cc = cc;
+    }
+
+    if (bcc.length) {
+      mailOptions.bcc = bcc;
+    }
+
+    await t.sendMail(mailOptions);
+
+    console.log("Inquiry email sent successfully:", inq._id || inq.email);
+  } catch (error) {
+    console.error("Inquiry mail failed:", error.message);
   }
 };

@@ -1,6 +1,6 @@
 // Saari items S.R.T. company profile PDF se li gayi hain.
 // Images: client/public/images/catalog/<category-id>/<item-slug>.jpg me rakhein
-// (PDF ki photos crop karke). Image na mile to placeholder dikhega.
+// (cropped from the PDF photos). If an image is missing, a placeholder is shown.
 
 const slug = (s) =>
   s

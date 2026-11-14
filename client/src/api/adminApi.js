@@ -30,6 +30,17 @@ export const downloadAttachment = async (id, filename = "attachment") => {
   saveBlob(res.data, filename);
 };
 
+export const downloadInquiryAttachment = async (
+  id,
+  index,
+  filename = "RFQ attachment",
+) => {
+  const res = await axiosClient.get(`/inquiries/${id}/attachments/${index}`, {
+    responseType: "blob",
+  });
+
+  saveBlob(res.data, filename);
+};
 // Current filter ke hisaab se CSV
 export const exportInquiriesCsv = async (params = {}) => {
   const res = await axiosClient.get("/inquiries/export", {

@@ -9,7 +9,7 @@ const linkCls =
   "inline-flex items-center gap-1 transition hover:translate-x-0.5 hover:text-white";
 
 export default function Footer() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const tel = company.phone.replace(/\s/g, "");
 
   return (
@@ -50,17 +50,20 @@ export default function Footer() {
                 Contact
               </Link>
             </li>
-            <li>
-              {isAuthenticated ? (
+            {user?.role === "admin" && (
+              <li>
                 <Link to="/dashboard" className={linkCls}>
                   Dashboard
                 </Link>
-              ) : (
+              </li>
+            )}
+            {!isAuthenticated && (
+              <li>
                 <Link to="/login" className={linkCls}>
                   Login
                 </Link>
-              )}
-            </li>
+              </li>
+            )}
           </ul>
         </div>
 

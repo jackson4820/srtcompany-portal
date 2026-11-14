@@ -94,9 +94,11 @@ export default function Navbar() {
     if (loading) return null;
     return isAuthenticated ? (
       <>
-        <Link to="/dashboard" onClick={onClick} className={outline}>
-          <LayoutDashboard size={16} /> Dashboard
-        </Link>
+        {user?.role === "admin" && (
+          <Link to="/dashboard" onClick={onClick} className={outline}>
+            <LayoutDashboard size={16} /> Dashboard
+          </Link>
+        )}
         <button onClick={handleLogout} className={solid}>
           <LogOut size={16} /> Logout
         </button>

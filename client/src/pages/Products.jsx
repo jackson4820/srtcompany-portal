@@ -3,7 +3,6 @@ import CategoryExplorer from "../components/CategoryExplorer";
 import Seo from "../components/Seo";
 import { categories } from "../data/catalog";
 import { seo } from "../data/content";
-import { company } from "../data/content";
 
 const total = categories.reduce((n, c) => n + c.items.length, 0);
 

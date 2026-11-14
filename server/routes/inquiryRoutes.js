@@ -12,15 +12,22 @@ const DOC_EXT = [
   ".png",
   ".jpg",
   ".jpeg",
+  ".webp",
+  ".gif",
+  ".heic",
   ".xls",
   ".xlsx",
   ".doc",
   ".docx",
+  ".csv",
+  ".txt",
+  ".ppt",
+  ".pptx",
   ".dwg",
-]; // BOQ / drawing
-const PHOTO_EXT = [".png", ".jpg", ".jpeg", ".webp"]; // item ki photo sirf image
+];
 
-// MulterError naam dene se errorMiddleware ise 400 + sahi message ke saath bhejta hai
+const PHOTO_EXT = [".png", ".jpg", ".jpeg", ".webp"];
+
 const badFile = (msg) =>
   Object.assign(new Error(msg), {
     name: "MulterError",
@@ -29,19 +36,29 @@ const badFile = (msg) =>
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024, files: 11 },
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+    files: 16,
+  },
   fileFilter: (req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
+
     if (file.fieldname === "itemPhotos") {
       return PHOTO_EXT.includes(ext) && file.mimetype.startsWith("image/")
         ? cb(null, true)
         : cb(badFile("Item photo must be a JPG, PNG or WEBP image"));
     }
-    if (file.fieldname === "attachment") {
+
+    if (file.fieldname === "attachments" || file.fieldname === "attachment") {
       return DOC_EXT.includes(ext)
         ? cb(null, true)
-        : cb(badFile("Only PDF, image, Excel, Word or DWG files are allowed"));
+        : cb(
+            badFile(
+              "Unsupported file. Allowed: PDF, images, Word, Excel, PowerPoint, CSV, TXT and DWG",
+            ),
+          );
     }
+
     return cb(badFile("Unexpected file field"));
   },
 });
@@ -61,6 +78,7 @@ router.post(
   "/",
   limiter,
   upload.fields([
+    { name: "attachments", maxCount: 5 },
     { name: "attachment", maxCount: 1 },
     { name: "itemPhotos", maxCount: 10 },
   ]),
@@ -68,11 +86,13 @@ router.post(
 );
 
 router.use(protect, authorize("admin"));
+
 router.get("/", c.listInquiries);
 router.get("/export", c.exportInquiries);
 router.patch("/:id/status", c.updateStatus);
 router.patch("/:id/notes", c.updateNotes);
 router.get("/:id/attachment", c.downloadAttachment);
+router.get("/:id/attachments/:idx", c.downloadInquiryAttachment);
 router.get("/:id/items/:idx/photo", c.getItemPhoto);
 router.delete("/:id", c.deleteInquiry);
 

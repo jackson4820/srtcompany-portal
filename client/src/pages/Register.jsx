@@ -5,7 +5,7 @@ import { errMsg } from "../api/axiosClient";
 import Seo from "../components/Seo";
 
 export default function Register() {
-  const { register, isAuthenticated } = useAuth();
+  const { register, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({
     name: "",
@@ -16,7 +16,10 @@ export default function Register() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
-  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
+  if (isAuthenticated)
+    return (
+      <Navigate to={user?.role === "admin" ? "/dashboard" : "/"} replace />
+    );
 
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
   const input =
@@ -32,7 +35,7 @@ export default function Register() {
     setBusy(true);
     try {
       await register(form.name.trim(), form.email.trim(), form.password);
-      navigate("/dashboard", { replace: true });
+      navigate("/", { replace: true });
     } catch (err) {
       setError(errMsg(err));
     } finally {
